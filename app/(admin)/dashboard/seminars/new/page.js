@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Header from "@/components/Header";
 
 const INITIAL_FORM = {
   title: "",
@@ -165,12 +166,6 @@ export default function NewSeminarPage() {
   // CANCEL
   // ---------------------------------------------------------
 
-  function handleCancel() {
-    if (loading) return;
-
-    router.push("/dashboard");
-  }
-
   // ---------------------------------------------------------
   // UI
   // ---------------------------------------------------------
@@ -181,53 +176,7 @@ export default function NewSeminarPage() {
           TOP NAVIGATION
       ====================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
-        <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          {/* BRAND */}
-
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-950 text-sm font-black text-white shadow-sm">
-              ES
-            </div>
-
-            <div className="hidden sm:block">
-              <p className="text-sm font-bold tracking-tight text-slate-950">
-                ELECTROSOFT SYSTEM
-              </p>
-
-              <p className="text-[11px] font-medium text-slate-500">
-                Seminar Management Platform
-              </p>
-            </div>
-          </div>
-
-          {/* BACK */}
-
-          <button
-            type="button"
-            onClick={handleCancel}
-            disabled={loading}
-            className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <svg
-              width="16"
-              height="16"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="M19 12H5" />
-              <path d="m12 19-7-7 7-7" />
-            </svg>
-
-            <span>Back</span>
-          </button>
-        </div>
-      </header>
+      <Header loading={loading} />
 
       {/* =====================================================
           PAGE CONTENT
@@ -565,7 +514,9 @@ export default function NewSeminarPage() {
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <button
               type="button"
-              onClick={handleCancel}
+              onClick={() => {
+                router.push("/dashboard");
+              }}
               disabled={loading}
               className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
             >

@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+import Link from "next/link";
 import { useEffect, useState } from "react";
 
 export default function StudentPage({ params }) {
@@ -320,25 +322,6 @@ export default function StudentPage({ params }) {
           <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
             {/* SUCCESS HEADER */}
 
-            <div className="bg-linear-to-br from-emerald-50 via-white to-white p-6 sm:p-8">
-              <div className="flex items-start gap-4">
-                <div className="grid h-14 w-14 shrink-0 place-items-center rounded-full bg-emerald-100 text-2xl font-bold text-emerald-700">
-                  ✓
-                </div>
-
-                <div>
-                  <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
-                    Registration Successful
-                  </h1>
-
-                  <p className="mt-2 text-sm leading-6 text-slate-600">
-                    Thank you for registering. You can now access the seminar
-                    resources below.
-                  </p>
-                </div>
-              </div>
-            </div>
-
             <div className="p-6 sm:p-8">
               {/* SEMINAR */}
 
@@ -464,7 +447,7 @@ export default function StudentPage({ params }) {
                                   <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z" />
                                   <circle cx="12" cy="12" r="3" />
                                 </svg>
-                                View PDF
+                                View file
                               </>
                             ) : (
                               <>
@@ -496,19 +479,161 @@ export default function StudentPage({ params }) {
 
               {/* FOOTER NOTE */}
 
-              <div className="mt-8 rounded-xl border border-blue-100 bg-blue-50 p-4">
-                <p className="text-xs leading-5 text-blue-800">
+              {/* FOOTER NOTE */}
+
+              <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-4">
+                <p className="text-center text-xs leading-5 text-blue-800 sm:text-sm">
                   Keep this page open while accessing your seminar materials.
                   Your registration gives you access to the resources provided
                   for this seminar.
                 </p>
               </div>
+
+              {/* COMPANY / SOCIAL FOOTER */}
+
+              <div className="mt-8 border-t border-slate-200 pt-8">
+                <div className="text-center">
+                  <div className="-mb-4 flex justify-center">
+                    <Image
+                      src="/logo.png"
+                      alt="Electrosoft System logo"
+                      width={60}
+                      height={60}
+                      className="h-24 w-24 object-contain"
+                    />
+                  </div>
+
+                  <p className="mx-auto mt-2 max-w-md text-xs leading-5 text-slate-500 sm:text-sm">
+                    Technical Training • Innovation • Industry-Ready Skills
+                  </p>
+
+                  {/* WEBSITE */}
+
+                  <Link
+                    href="https://electrosoftsystem.in/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-blue-600 transition hover:text-blue-700 hover:underline"
+                  >
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <circle cx="12" cy="12" r="10" />
+                      <path d="M2 12h20" />
+                      <path d="M12 2a15.3 15.3 0 0 1 0 20" />
+                      <path d="M12 2a15.3 15.3 0 0 0 0 20" />
+                    </svg>
+                    electrosoftsystem.in
+                  </Link>
+
+                  {/* SOCIAL MEDIA */}
+
+                  <div className="mt-6 flex items-center justify-center gap-3">
+                    {/* Instagram */}
+                    <Link
+                      href="https://www.instagram.com/electrosoft_system_pune/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Electrosoft System on Instagram"
+                      className="group grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-pink-200 hover:text-pink-600 hover:shadow-md"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <rect width="20" height="20" x="2" y="2" rx="5" />
+                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                        <path d="M17.5 6.5h.01" />
+                      </svg>
+                    </Link>
+
+                    {/* LinkedIn */}
+                    <Link
+                      href="https://www.linkedin.com/in/electrosoft-system-083a22237/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Electrosoft System on LinkedIn"
+                      className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 hover:shadow-md"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M6.5 8.5A2.5 2.5 0 1 0 6.5 3.5a2.5 2.5 0 0 0 0 5zM4 10h5v10H4V10zm7 0h4.8v1.4h.1c.7-1.2 2.1-2 4.2-2 4.5 0 5.3 2.9 5.3 6.7V20h-5v-3.5c0-1.7 0-3.9-2.4-3.9-2.4 0-2.7 1.9-2.7 3.8V20h-5V10z" />
+                      </svg>
+                    </Link>
+
+                    {/* YouTube */}
+                    <Link
+                      href="https://www.youtube.com/@ElectrosoftSystemPune"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Electrosoft System on YouTube"
+                      className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-red-200 hover:text-red-600 hover:shadow-md"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M23.5 6.2a3 3 0 0 0-2.1-2.1C19.5 3.5 12 3.5 12 3.5s-7.5 0-9.4.6A3 3 0 0 0 .5 6.2 31 31 0 0 0 0 12a31 31 0 0 0 .5 5.8 3 3 0 0 0 2.1 2.1c1.9.6 9.4.6 9.4.6s7.5 0 9.4-.6a3 3 0 0 0 2.1-2.1A31 31 0 0 0 24 12a31 31 0 0 0-.5-5.8zM9.6 15.8V8.2l6.5 3.8-6.5 3.8z" />
+                      </svg>
+                    </Link>
+
+                    {/* Facebook */}
+                    <Link
+                      href="https://www.facebook.com/itsLearningElectronics/"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label="Electrosoft System on Facebook"
+                      className="grid h-10 w-10 place-items-center rounded-xl border border-slate-200 bg-white text-slate-500 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:text-blue-600 hover:shadow-md"
+                    >
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        aria-hidden="true"
+                      >
+                        <path d="M14 8h3V4.5c-.5-.1-1.8-.2-3.4-.2-3.3 0-5.5 2-5.5 5.7V13H5v3.9h3.1V24H12v-7.1h3.4L16 13h-4V10.3c0-1.1.3-2.3 2-2.3z" />
+                      </svg>
+                    </Link>
+                  </div>
+
+                  {/* Bottom text */}
+
+                  <p className="mt-6 text-[11px] font-medium uppercase tracking-wider text-slate-400">
+                    © {new Date().getFullYear()} Electrosoft System. All rights
+                    reserved.
+                  </p>
+
+                  <p className="mt-1 text-[11px] text-slate-400">
+                    Seminar Resources Platform
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
-
-          <p className="mt-6 text-center text-xs font-medium text-slate-400">
-            ELECTROSOFT SYSTEM • Seminar Resources
-          </p>
         </div>
       </main>
     );
@@ -523,19 +648,9 @@ export default function StudentPage({ params }) {
       <div className="mx-auto max-w-xl">
         {/* BRAND */}
 
-        <div className="mb-6 text-center">
-          <div className="mx-auto flex w-fit items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-slate-950 text-sm font-black text-white shadow-lg">
-              ES
-            </div>
-
-            <div className="text-left">
-              <p className="text-sm font-black tracking-tight text-slate-950">
-                ELECTROSOFT SYSTEM
-              </p>
-
-              <p className="text-xs text-slate-500">Seminar Resources</p>
-            </div>
+        <div className="mb-2 text-center">
+          <div className="mx-auto w-fit border rounded-full p-4">
+            <Image src={"/logo.png"} alt="logo" width={100} height={100} />
           </div>
         </div>
 

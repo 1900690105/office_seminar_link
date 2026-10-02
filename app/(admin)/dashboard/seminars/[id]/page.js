@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
+import Header from "@/components/Header";
 
 export default function SeminarDetail({ params }) {
   const [id, setId] = useState("");
@@ -525,403 +526,410 @@ export default function SeminarDetail({ params }) {
   // ---------------------------------------------------------
 
   return (
-    <main className="min-h-screen bg-gray-50 p-4 sm:p-6">
-      <div className="mx-auto max-w-5xl space-y-6">
-        {/* =====================================================
+    <>
+      <header>
+        <Header loading={loading} />
+      </header>
+      <main className="min-h-screen bg-gray-50 p-4 sm:p-6">
+        <div className="mx-auto max-w-5xl space-y-6">
+          {/* =====================================================
             SEMINAR HEADER
         ====================================================== */}
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-6">
-            {/* TITLE */}
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-6">
+              {/* TITLE */}
 
-            <div>
-              <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
-                  {seminar.title}
-                </h1>
+              <div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">
+                    {seminar.title}
+                  </h1>
 
-                {seminar.status && (
-                  <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
-                    {seminar.status}
-                  </span>
+                  {seminar.status && (
+                    <span className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-700">
+                      {seminar.status}
+                    </span>
+                  )}
+                </div>
+
+                {seminar.collegeName && (
+                  <p className="mt-2 text-gray-600">{seminar.collegeName}</p>
+                )}
+
+                {seminar.description && (
+                  <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500">
+                    {seminar.description}
+                  </p>
+                )}
+
+                {seminar.speakerName && (
+                  <p className="mt-3 text-sm text-gray-600">
+                    <span className="font-medium">Speaker:</span>{" "}
+                    {seminar.speakerName}
+                  </p>
                 )}
               </div>
 
-              {seminar.collegeName && (
-                <p className="mt-2 text-gray-600">{seminar.collegeName}</p>
-              )}
+              {/* STUDENT LINK */}
 
-              {seminar.description && (
-                <p className="mt-3 max-w-3xl text-sm leading-6 text-gray-500">
-                  {seminar.description}
-                </p>
-              )}
+              <div className="rounded-xl bg-gray-50 p-4">
+                <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                  <div className="min-w-0">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Student Registration Link
+                    </p>
 
-              {seminar.speakerName && (
-                <p className="mt-3 text-sm text-gray-600">
-                  <span className="font-medium">Speaker:</span>{" "}
-                  {seminar.speakerName}
-                </p>
-              )}
+                    <p className="mt-1 break-all text-sm text-blue-600">
+                      {publicUrl}
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={copyStudentLink}
+                    className="shrink-0 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
+                  >
+                    {copied ? "Copied!" : "Copy Link"}
+                  </button>
+                </div>
+              </div>
+
+              {/* QR ACTIONS */}
+
+              <div className="flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={generateQR}
+                  disabled={qrLoading}
+                  className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {qrLoading
+                    ? "Generating..."
+                    : qrCode
+                      ? "Regenerate QR Code"
+                      : "Generate QR Code"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={deleteSeminar}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
+                >
+                  <svg
+                    width="17"
+                    height="17"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M3 6h18" />
+                    <path d="M8 6V4h8v2" />
+                    <path d="M19 6l-1 14H6L5 6" />
+                    <path d="M10 11v5" />
+                    <path d="M14 11v5" />
+                  </svg>
+                  Delete Seminar
+                </button>
+
+                {qrCode && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={downloadQR}
+                      className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                    >
+                      Download QR
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={printQR}
+                      className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                    >
+                      Print QR
+                    </button>
+                  </>
+                )}
+              </div>
             </div>
+          </section>
 
-            {/* STUDENT LINK */}
+          {/* =====================================================
+            ERROR
+        ====================================================== */}
 
-            <div className="rounded-xl bg-gray-50 p-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                    Student Registration Link
+          {error && (
+            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+              {error}
+            </div>
+          )}
+
+          {/* =====================================================
+            QR CODE
+        ====================================================== */}
+
+          {showQR && qrCode && (
+            <section className="rounded-2xl bg-white p-6 shadow-sm">
+              <div className="flex flex-col items-center">
+                <div className="w-full">
+                  <h2 className="text-xl font-semibold text-gray-900">
+                    Seminar QR Code
+                  </h2>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Students can scan this QR code to register for the seminar
+                    and access the uploaded resources.
+                  </p>
+                </div>
+
+                {/* QR */}
+
+                <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
+                  <img
+                    src={qrCode}
+                    alt={`QR code for ${seminar.title}`}
+                    className="h-72 w-72 sm:h-96 sm:w-96"
+                  />
+                </div>
+
+                {/* SCAN MESSAGE */}
+
+                <div className="mt-5 text-center">
+                  <p className="text-lg font-semibold text-gray-900">
+                    Scan to Register
                   </p>
 
-                  <p className="mt-1 break-all text-sm text-blue-600">
+                  <p className="mt-1 text-sm text-gray-500">
+                    Scan this QR code with a mobile phone camera.
+                  </p>
+                </div>
+
+                {/* URL */}
+
+                <div className="mt-5 w-full max-w-2xl rounded-xl bg-gray-50 p-4">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    Student URL
+                  </p>
+
+                  <p className="mt-2 break-all text-sm text-gray-700">
                     {publicUrl}
                   </p>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={copyStudentLink}
-                  className="shrink-0 rounded-lg border border-gray-300 bg-white px-4 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-100"
-                >
-                  {copied ? "Copied!" : "Copy Link"}
-                </button>
-              </div>
-            </div>
+                {/* ACTIONS */}
 
-            {/* QR ACTIONS */}
-
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                onClick={generateQR}
-                disabled={qrLoading}
-                className="rounded-lg bg-slate-900 px-5 py-3 text-sm font-medium text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {qrLoading
-                  ? "Generating..."
-                  : qrCode
-                    ? "Regenerate QR Code"
-                    : "Generate QR Code"}
-              </button>
-
-              <button
-                type="button"
-                onClick={deleteSeminar}
-                className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-bold text-red-700 transition hover:border-red-300 hover:bg-red-100 focus:outline-none focus:ring-4 focus:ring-red-100"
-              >
-                <svg
-                  width="17"
-                  height="17"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M3 6h18" />
-                  <path d="M8 6V4h8v2" />
-                  <path d="M19 6l-1 14H6L5 6" />
-                  <path d="M10 11v5" />
-                  <path d="M14 11v5" />
-                </svg>
-                Delete Seminar
-              </button>
-
-              {qrCode && (
-                <>
+                <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <button
                     type="button"
                     onClick={downloadQR}
-                    className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                    className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
                   >
-                    Download QR
+                    Download PNG
                   </button>
 
                   <button
                     type="button"
                     onClick={printQR}
-                    className="rounded-lg border border-gray-300 bg-white px-5 py-3 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                    className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
                   >
                     Print QR
                   </button>
-                </>
-              )}
-            </div>
-          </div>
-        </section>
 
-        {/* =====================================================
-            ERROR
-        ====================================================== */}
+                  <button
+                    type="button"
+                    onClick={copyStudentLink}
+                    className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                  >
+                    {copied ? "Copied!" : "Copy Student Link"}
+                  </button>
 
-        {error && (
-          <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-            {error}
-          </div>
-        )}
-
-        {/* =====================================================
-            QR CODE
-        ====================================================== */}
-
-        {showQR && qrCode && (
-          <section className="rounded-2xl bg-white p-6 shadow-sm">
-            <div className="flex flex-col items-center">
-              <div className="w-full">
-                <h2 className="text-xl font-semibold text-gray-900">
-                  Seminar QR Code
-                </h2>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Students can scan this QR code to register for the seminar and
-                  access the uploaded resources.
-                </p>
+                  <button
+                    type="button"
+                    onClick={() => setShowQR(false)}
+                    className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
+            </section>
+          )}
 
-              {/* QR */}
-
-              <div className="mt-6 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                <img
-                  src={qrCode}
-                  alt={`QR code for ${seminar.title}`}
-                  className="h-72 w-72 sm:h-96 sm:w-96"
-                />
-              </div>
-
-              {/* SCAN MESSAGE */}
-
-              <div className="mt-5 text-center">
-                <p className="text-lg font-semibold text-gray-900">
-                  Scan to Register
-                </p>
-
-                <p className="mt-1 text-sm text-gray-500">
-                  Scan this QR code with a mobile phone camera.
-                </p>
-              </div>
-
-              {/* URL */}
-
-              <div className="mt-5 w-full max-w-2xl rounded-xl bg-gray-50 p-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                  Student URL
-                </p>
-
-                <p className="mt-2 break-all text-sm text-gray-700">
-                  {publicUrl}
-                </p>
-              </div>
-
-              {/* ACTIONS */}
-
-              <div className="mt-5 flex flex-wrap justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={downloadQR}
-                  className="rounded-lg bg-slate-900 px-5 py-2.5 text-sm font-medium text-white transition hover:bg-slate-800"
-                >
-                  Download PNG
-                </button>
-
-                <button
-                  type="button"
-                  onClick={printQR}
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  Print QR
-                </button>
-
-                <button
-                  type="button"
-                  onClick={copyStudentLink}
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  {copied ? "Copied!" : "Copy Student Link"}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => setShowQR(false)}
-                  className="rounded-lg border border-gray-300 bg-white px-5 py-2.5 text-sm font-medium text-gray-700 transition hover:bg-gray-50"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </section>
-        )}
-
-        {/* =====================================================
+          {/* =====================================================
             UPLOAD RESOURCE
         ====================================================== */}
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Upload Resource
-          </h2>
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Upload Resource
+            </h2>
 
-          <p className="mt-1 text-sm text-gray-500">
-            Upload presentations, PDFs, documents or other seminar material.
-          </p>
+            <p className="mt-1 text-sm text-gray-500">
+              Upload presentations, PDFs, documents or other seminar material.
+            </p>
 
-          <form onSubmit={upload} className="mt-6 space-y-5">
-            {/* TITLE */}
+            <form onSubmit={upload} className="mt-6 space-y-5">
+              {/* TITLE */}
 
-            <div>
-              <label
-                htmlFor="resource-title"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                Resource Title
-              </label>
+              <div>
+                <label
+                  htmlFor="resource-title"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  Resource Title
+                </label>
 
-              <input
-                id="resource-title"
-                type="text"
-                value={title}
-                onChange={(event) => setTitle(event.target.value)}
-                placeholder="Example: Full Stack Web Development PPT"
-                className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              />
-            </div>
+                <input
+                  id="resource-title"
+                  type="text"
+                  value={title}
+                  onChange={(event) => setTitle(event.target.value)}
+                  placeholder="Example: Full Stack Web Development PPT"
+                  className="w-full rounded-lg border border-gray-300 px-4 py-3 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                />
+              </div>
 
-            {/* FILE */}
+              {/* FILE */}
 
-            <div>
-              <label
-                htmlFor="file"
-                className="mb-2 block text-sm font-medium text-gray-700"
-              >
-                File
-              </label>
+              <div>
+                <label
+                  htmlFor="file"
+                  className="mb-2 block text-sm font-medium text-gray-700"
+                >
+                  File
+                </label>
 
-              <input
-                id="file"
-                type="file"
-                onChange={(event) => setFile(event.target.files?.[0] || null)}
-                accept=".pdf,.ppt,.pptx,.doc,.docx"
-                className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm"
-              />
+                <input
+                  id="file"
+                  type="file"
+                  onChange={(event) => setFile(event.target.files?.[0] || null)}
+                  accept=".pdf,.ppt,.pptx,.doc,.docx"
+                  className="w-full rounded-lg border border-gray-300 bg-white p-2.5 text-sm"
+                />
 
-              <p className="mt-2 text-xs text-gray-500">
-                Allowed: PDF, PPT, PPTX, DOC, DOCX. Maximum size: 25MB.
-              </p>
-            </div>
-
-            {/* SELECTED FILE */}
-
-            {file && (
-              <div className="rounded-lg bg-gray-50 p-4">
-                <p className="text-sm font-medium text-gray-800">
-                  Selected file
-                </p>
-
-                <p className="mt-1 break-all text-sm text-gray-500">
-                  {file.name}
-                </p>
-
-                <p className="mt-1 text-xs text-gray-400">
-                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                <p className="mt-2 text-xs text-gray-500">
+                  Allowed: PDF, PPT, PPTX, DOC, DOCX. Maximum size: 25MB.
                 </p>
               </div>
-            )}
 
-            {/* UPLOAD */}
+              {/* SELECTED FILE */}
 
-            <button
-              type="submit"
-              disabled={uploading || !file}
-              className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {uploading ? "Uploading..." : "Upload Resource"}
-            </button>
-          </form>
-        </section>
+              {file && (
+                <div className="rounded-lg bg-gray-50 p-4">
+                  <p className="text-sm font-medium text-gray-800">
+                    Selected file
+                  </p>
 
-        {/* =====================================================
+                  <p className="mt-1 break-all text-sm text-gray-500">
+                    {file.name}
+                  </p>
+
+                  <p className="mt-1 text-xs text-gray-400">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </p>
+                </div>
+              )}
+
+              {/* UPLOAD */}
+
+              <button
+                type="submit"
+                disabled={uploading || !file}
+                className="rounded-lg bg-blue-600 px-5 py-3 font-medium text-white transition hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {uploading ? "Uploading..." : "Upload Resource"}
+              </button>
+            </form>
+          </section>
+
+          {/* =====================================================
             RESOURCES
         ====================================================== */}
 
-        <section className="rounded-2xl bg-white p-6 shadow-sm">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900">Resources</h2>
-
-              <p className="mt-1 text-sm text-gray-500">
-                Files available to registered students.
-              </p>
-            </div>
-
-            <div className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
-              {seminar.resources?.length || 0}{" "}
-              {seminar.resources?.length === 1 ? "file" : "files"}
-            </div>
-          </div>
-
-          <div className="mt-5 space-y-3">
-            {seminar.resources?.length ? (
-              seminar.resources.map((resource) => (
-                <div
-                  key={resource.id}
-                  className="flex flex-col gap-4 rounded-xl border border-gray-200 p-4 transition hover:border-gray-300 hover:shadow-sm md:flex-row md:items-center md:justify-between"
-                >
-                  <div className="flex min-w-0 items-center gap-4">
-                    {/* FILE ICON */}
-
-                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gray-100 text-xs font-bold text-gray-700">
-                      {resource.fileType || "FILE"}
-                    </div>
-
-                    {/* FILE DETAILS */}
-
-                    <div className="min-w-0">
-                      <p className="truncate font-medium text-gray-900">
-                        {resource.title}
-                      </p>
-
-                      <p className="mt-1 truncate text-sm text-gray-500">
-                        {resource.fileName || resource.title}
-                      </p>
-
-                      {resource.bytes && (
-                        <p className="mt-1 text-xs text-gray-400">
-                          {(resource.bytes / 1024 / 1024).toFixed(2)} MB
-                        </p>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* ADMIN VIEW */}
-
-                  {resource.cloudinaryUrl && (
-                    <a
-                      href={resource.cloudinaryUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="shrink-0 rounded-lg bg-gray-900 px-4 py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800"
-                    >
-                      View File
-                    </a>
-                  )}
-                </div>
-              ))
-            ) : (
-              <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">
-                <p className="font-medium text-gray-700">
-                  No resources uploaded yet.
-                </p>
+          <section className="rounded-2xl bg-white p-6 shadow-sm">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Resources
+                </h2>
 
                 <p className="mt-1 text-sm text-gray-500">
-                  Upload a PDF, PPT or document above.
+                  Files available to registered students.
                 </p>
               </div>
-            )}
-          </div>
-        </section>
-      </div>
-    </main>
+
+              <div className="rounded-full bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">
+                {seminar.resources?.length || 0}{" "}
+                {seminar.resources?.length === 1 ? "file" : "files"}
+              </div>
+            </div>
+
+            <div className="mt-5 space-y-3">
+              {seminar.resources?.length ? (
+                seminar.resources.map((resource) => (
+                  <div
+                    key={resource.id}
+                    className="flex flex-col gap-4 rounded-xl border border-gray-200 p-4 transition hover:border-gray-300 hover:shadow-sm md:flex-row md:items-center md:justify-between"
+                  >
+                    <div className="flex min-w-0 items-center gap-4">
+                      {/* FILE ICON */}
+
+                      <div className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-gray-100 text-xs font-bold text-gray-700">
+                        {resource.fileType || "FILE"}
+                      </div>
+
+                      {/* FILE DETAILS */}
+
+                      <div className="min-w-0">
+                        <p className="truncate font-medium text-gray-900">
+                          {resource.title}
+                        </p>
+
+                        <p className="mt-1 truncate text-sm text-gray-500">
+                          {resource.fileName || resource.title}
+                        </p>
+
+                        {resource.bytes && (
+                          <p className="mt-1 text-xs text-gray-400">
+                            {(resource.bytes / 1024 / 1024).toFixed(2)} MB
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* ADMIN VIEW */}
+
+                    {resource.cloudinaryUrl && (
+                      <a
+                        href={resource.cloudinaryUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg bg-gray-900 px-4 py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800"
+                      >
+                        View File
+                      </a>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-gray-300 p-8 text-center">
+                  <p className="font-medium text-gray-700">
+                    No resources uploaded yet.
+                  </p>
+
+                  <p className="mt-1 text-sm text-gray-500">
+                    Upload a PDF, PPT or document above.
+                  </p>
+                </div>
+              )}
+            </div>
+          </section>
+        </div>
+      </main>
+    </>
   );
 }

@@ -1,9 +1,11 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import * as XLSX from "xlsx";
 
 export default function StudentsPage() {
+  const router = useRouter();
   const [students, setStudents] = useState([]);
   const [seminars, setSeminars] = useState([]);
 
@@ -303,6 +305,29 @@ export default function StudentsPage() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-5 sm:px-6 lg:px-8">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-blue-600">
+              <button
+                type="button"
+                onClick={() => {
+                  router.push("/dashboard");
+                }}
+                disabled={loading}
+                className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-slate-50 hover:text-slate-950 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M19 12H5" />
+                  <path d="m12 19-7-7 7-7" />
+                </svg>
+              </button>{" "}
               ELECTROSOFT SYSTEM
             </p>
 

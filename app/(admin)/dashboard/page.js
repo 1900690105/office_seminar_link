@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { getAdmin } from "@/lib/auth";
+import Image from "next/image";
 
 export const dynamic = "force-dynamic";
 
@@ -122,7 +123,12 @@ export default async function Dashboard() {
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
           <Link href="/dashboard" className="group flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900 text-sm font-bold text-white shadow-sm transition group-hover:bg-slate-800">
-              ES
+              <Image
+                src={"/sublogo.png"}
+                alt="sublogo"
+                width={50}
+                height={50}
+              />
             </div>
 
             <div>
