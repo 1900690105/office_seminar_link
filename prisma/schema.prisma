@@ -1,0 +1,87 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SeminarStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum ResourceType {
+  PDF
+  PPT
+  PPTX
+  DOC
+  DOCX
+  OTHER
+}
+
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Seminar {
+  id          String        @id @default(cuid())
+  title       String
+  slug        String        @unique
+  description String?
+  collegeName String
+  speakerName String?
+  seminarDate DateTime
+  status      SeminarStatus @default(DRAFT)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  registrations Registration[]
+  resources     Resource[]
+}
+
+model Student {
+  id        String   @id @default(cuid())
+  name      String
+  phone     String
+  createdAt DateTime @default(now())
+
+  registrations Registration[]
+
+  @@index([phone])
+}
+
+model Registration {
+  id           String   @id @default(cuid())
+  studentId    String
+  seminarId    String
+  accessToken  String   @unique
+  registeredAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  seminar Seminar @relation(fields: [seminarId], references: [id], onDelete: Cascade)
+
+  @@unique([studentId, seminarId])
+  @@index([seminarId])
+  @@index([studentId])
+}
+
+model Resource {
+  id            String   @id @default(cuid())
+  seminarId     String
+  title         String
+  fileName      String
+  fileType      String
+  cloudinaryUrl String
+  publicId      String
+  bytes         Int?
+  createdAt     DateTime @default(now())
+
+  seminar Seminar @relation(fields: [seminarId], references: [id], onDelete: Cascade)
+}
