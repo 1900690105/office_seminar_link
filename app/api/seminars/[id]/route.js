@@ -2,36 +2,127 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { getAdmin } from "@/lib/auth";
 import cloudinary from "@/lib/cloudinary";
+import { makeSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 
-// =========================================================
+// ============================================================
+// HELPERS
+// ============================================================
+
+function cleanString(value) {
+  if (typeof value !== "string") {
+    return "";
+  }
+
+  return value.trim();
+}
+
+function isValidDate(value) {
+  if (!value) return false;
+
+  const date = new Date(value);
+
+  return !Number.isNaN(date.getTime());
+}
+
+async function generateUniqueSlug(title, currentId) {
+  const baseSlug = makeSlug(title);
+
+  if (!baseSlug) {
+    throw new Error("Unable to generate seminar slug.");
+  }
+
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const existing = await prisma.seminar.findUnique({
+      where: {
+        slug,
+      },
+      select: {
+        id: true,
+      },
+    });
+
+    // No seminar uses this slug
+    if (!existing) {
+      return slug;
+    }
+
+    // Current seminar already owns this slug
+    if (existing.id === currentId) {
+      return slug;
+    }
+
+    counter += 1;
+    slug = `${baseSlug}-${counter}`;
+
+    // Safety protection
+    if (counter > 1000) {
+      throw new Error("Unable to generate a unique seminar slug.");
+    }
+  }
+}
+
+// ============================================================
 // GET SEMINAR
-// =========================================================
+// ============================================================
 
 export async function GET(request, ctx) {
   try {
+    // --------------------------------------------------------
+    // AUTH
+    // --------------------------------------------------------
+
     const admin = await getAdmin();
 
     if (!admin) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
     }
+
+    // --------------------------------------------------------
+    // PARAMS
+    // --------------------------------------------------------
 
     const { id } = await ctx.params;
 
-    if (!id) {
+    if (!id || typeof id !== "string") {
       return NextResponse.json(
-        { error: "Seminar ID is required" },
-        { status: 400 },
+        {
+          success: false,
+          error: "Seminar ID is required.",
+        },
+        {
+          status: 400,
+        },
       );
     }
+
+    // --------------------------------------------------------
+    // DATABASE
+    // --------------------------------------------------------
 
     const seminar = await prisma.seminar.findUnique({
       where: {
         id,
       },
       include: {
-        resources: true,
+        resources: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+
         _count: {
           select: {
             registrations: true,
@@ -42,16 +133,37 @@ export async function GET(request, ctx) {
     });
 
     if (!seminar) {
-      return NextResponse.json({ error: "Seminar not found" }, { status: 404 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar not found.",
+        },
+        {
+          status: 404,
+        },
+      );
     }
 
-    return NextResponse.json(seminar);
+    // --------------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------------
+
+    return NextResponse.json(
+      {
+        success: true,
+        seminar,
+      },
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
     console.error("GET SEMINAR ERROR:", error);
 
     return NextResponse.json(
       {
-        error: "Failed to load seminar",
+        success: false,
+        error: "Failed to load seminar.",
       },
       {
         status: 500,
@@ -60,21 +172,22 @@ export async function GET(request, ctx) {
   }
 }
 
-// =========================================================
-// DELETE SEMINAR
-// =========================================================
+// ============================================================
+// UPDATE SEMINAR
+// ============================================================
 
-export async function DELETE(request, ctx) {
+export async function PATCH(request, ctx) {
   try {
-    // -----------------------------------------------------
-    // 1. AUTHENTICATION
-    // -----------------------------------------------------
+    // --------------------------------------------------------
+    // AUTH
+    // --------------------------------------------------------
 
     const admin = await getAdmin();
 
     if (!admin) {
       return NextResponse.json(
         {
+          success: false,
           error: "Unauthorized",
         },
         {
@@ -83,16 +196,17 @@ export async function DELETE(request, ctx) {
       );
     }
 
-    // -----------------------------------------------------
-    // 2. SEMINAR ID
-    // -----------------------------------------------------
+    // --------------------------------------------------------
+    // PARAMS
+    // --------------------------------------------------------
 
     const { id } = await ctx.params;
 
-    if (!id) {
+    if (!id || typeof id !== "string") {
       return NextResponse.json(
         {
-          error: "Seminar ID is required",
+          success: false,
+          error: "Seminar ID is required.",
         },
         {
           status: 400,
@@ -100,15 +214,352 @@ export async function DELETE(request, ctx) {
       );
     }
 
-    console.log("");
-    console.log("==========================================");
-    console.log("DELETE SEMINAR START");
-    console.log("==========================================");
-    console.log("Seminar ID:", id);
+    // --------------------------------------------------------
+    // CHECK SEMINAR
+    // --------------------------------------------------------
 
-    // -----------------------------------------------------
-    // 3. GET SEMINAR + RESOURCES
-    // -----------------------------------------------------
+    const existingSeminar = await prisma.seminar.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!existingSeminar) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar not found.",
+        },
+        {
+          status: 404,
+        },
+      );
+    }
+
+    // --------------------------------------------------------
+    // BODY
+    // --------------------------------------------------------
+
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Invalid JSON request body.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // --------------------------------------------------------
+    // CLEAN VALUES
+    // --------------------------------------------------------
+
+    const title = cleanString(body.title);
+    const collegeName = cleanString(body.collegeName);
+    const speakerName = cleanString(body.speakerName);
+    const description = cleanString(body.description);
+
+    // --------------------------------------------------------
+    // VALIDATION
+    // --------------------------------------------------------
+
+    if (!title) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar title is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (title.length < 3) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar title must contain at least 3 characters.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (title.length > 150) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar title cannot exceed 150 characters.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (!collegeName) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "College name is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (collegeName.length < 2) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Please enter a valid college name.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (collegeName.length > 200) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "College name cannot exceed 200 characters.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (speakerName.length > 150) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Speaker name cannot exceed 150 characters.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    if (description.length > 2000) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Description cannot exceed 2000 characters.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // --------------------------------------------------------
+    // DATE
+    // --------------------------------------------------------
+
+    let seminarDate = existingSeminar.seminarDate;
+
+    if (body.seminarDate !== undefined) {
+      if (!body.seminarDate) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Seminar date is required.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      if (!isValidDate(body.seminarDate)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid seminar date.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      seminarDate = new Date(body.seminarDate);
+    }
+
+    // --------------------------------------------------------
+    // STATUS
+    // --------------------------------------------------------
+
+    const allowedStatuses = ["DRAFT", "PUBLISHED", "ARCHIVED"];
+
+    let status = existingSeminar.status;
+
+    if (body.status !== undefined) {
+      if (!allowedStatuses.includes(body.status)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "Invalid seminar status.",
+          },
+          {
+            status: 400,
+          },
+        );
+      }
+
+      status = body.status;
+    }
+
+    // --------------------------------------------------------
+    // SLUG
+    // --------------------------------------------------------
+    //
+    // If title changes, create a new unique slug.
+    //
+    // If title does not change, keep the current slug.
+    // --------------------------------------------------------
+
+    let slug = existingSeminar.slug;
+
+    if (title !== existingSeminar.title) {
+      slug = await generateUniqueSlug(title, id);
+    }
+
+    // --------------------------------------------------------
+    // UPDATE
+    // --------------------------------------------------------
+
+    const updatedSeminar = await prisma.seminar.update({
+      where: {
+        id,
+      },
+
+      data: {
+        title,
+        slug,
+        collegeName,
+        speakerName: speakerName || null,
+        description: description || null,
+        seminarDate,
+        status,
+      },
+
+      include: {
+        resources: {
+          orderBy: {
+            createdAt: "asc",
+          },
+        },
+
+        _count: {
+          select: {
+            registrations: true,
+            resources: true,
+          },
+        },
+      },
+    });
+
+    // --------------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------------
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Seminar updated successfully.",
+        seminar: updatedSeminar,
+      },
+      {
+        status: 200,
+      },
+    );
+  } catch (error) {
+    console.error("UPDATE SEMINAR ERROR:", error);
+
+    // Prisma unique constraint
+    if (error?.code === "P2002") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "A seminar with this information already exists.",
+        },
+        {
+          status: 409,
+        },
+      );
+    }
+
+    return NextResponse.json(
+      {
+        success: false,
+        error: "Failed to update seminar.",
+      },
+      {
+        status: 500,
+      },
+    );
+  }
+}
+
+// ============================================================
+// DELETE SEMINAR
+// ============================================================
+
+export async function DELETE(request, ctx) {
+  try {
+    // --------------------------------------------------------
+    // AUTH
+    // --------------------------------------------------------
+
+    const admin = await getAdmin();
+
+    if (!admin) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Unauthorized",
+        },
+        {
+          status: 401,
+        },
+      );
+    }
+
+    // --------------------------------------------------------
+    // PARAMS
+    // --------------------------------------------------------
+
+    const { id } = await ctx.params;
+
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "Seminar ID is required.",
+        },
+        {
+          status: 400,
+        },
+      );
+    }
+
+    // --------------------------------------------------------
+    // LOAD SEMINAR + RESOURCES
+    // --------------------------------------------------------
 
     const seminar = await prisma.seminar.findUnique({
       where: {
@@ -119,17 +570,9 @@ export async function DELETE(request, ctx) {
         resources: {
           select: {
             id: true,
-            fileName: true,
-            fileType: true,
             publicId: true,
             cloudinaryUrl: true,
-          },
-        },
-
-        _count: {
-          select: {
-            registrations: true,
-            resources: true,
+            fileName: true,
           },
         },
       },
@@ -138,7 +581,8 @@ export async function DELETE(request, ctx) {
     if (!seminar) {
       return NextResponse.json(
         {
-          error: "Seminar not found",
+          success: false,
+          error: "Seminar not found.",
         },
         {
           status: 404,
@@ -146,176 +590,91 @@ export async function DELETE(request, ctx) {
       );
     }
 
-    console.log("Resources:", seminar.resources.length);
-
-    // -----------------------------------------------------
-    // 4. DELETE EACH CLOUDINARY RESOURCE
-    // -----------------------------------------------------
+    // --------------------------------------------------------
+    // DELETE CLOUDINARY RESOURCES
+    // --------------------------------------------------------
+    //
+    // IMPORTANT:
+    // We delete ONLY files belonging to this seminar.
+    //
+    // Students are NOT touched.
+    //
+    // Registrations will be deleted automatically by Prisma
+    // because your schema has:
+    //
+    // seminar Seminar @relation(
+    //   fields: [seminarId],
+    //   references: [id],
+    //   onDelete: Cascade
+    // )
+    //
+    // Student records remain in the Student table.
+    // --------------------------------------------------------
 
     const cloudinaryResults = [];
 
     for (const resource of seminar.resources) {
-      const publicId = resource.publicId;
-
-      console.log("");
-      console.log("------------------------------------------");
-      console.log("Deleting resource");
-      console.log("File:", resource.fileName);
-      console.log("Public ID:", publicId);
-      console.log("------------------------------------------");
-
-      if (!publicId) {
+      if (!resource.publicId) {
         cloudinaryResults.push({
           resourceId: resource.id,
-          fileName: resource.fileName,
           success: false,
-          reason: "Missing Cloudinary publicId",
+          status: "NO_PUBLIC_ID",
         });
 
         continue;
       }
 
-      let deleted = false;
-      let deleteResult = null;
-
-      // ---------------------------------------------------
-      // TRY RAW
-      // ---------------------------------------------------
-
       try {
-        console.log("Trying resource_type: raw");
-
-        deleteResult = await cloudinary.api.delete_resources([publicId], {
+        const result = await cloudinary.uploader.destroy(resource.publicId, {
           resource_type: "raw",
           type: "upload",
           invalidate: true,
         });
 
-        console.log(
-          "RAW DELETE RESULT:",
-          JSON.stringify(deleteResult, null, 2),
-        );
+        cloudinaryResults.push({
+          resourceId: resource.id,
+          publicId: resource.publicId,
+          success: true,
+          result: result?.result || "unknown",
+        });
 
-        const status = deleteResult?.deleted?.[publicId];
+        console.log("CLOUDINARY DELETE:", {
+          resourceId: resource.id,
+          publicId: resource.publicId,
+          result: result?.result,
+        });
+      } catch (cloudinaryError) {
+        console.error("CLOUDINARY DELETE ERROR:", {
+          resourceId: resource.id,
+          publicId: resource.publicId,
+          error: cloudinaryError,
+        });
 
-        if (status === "deleted" || status === "not_found") {
-          deleted = true;
-        }
-      } catch (error) {
-        console.error("RAW DELETE ERROR:", error?.message);
-      }
-
-      // ---------------------------------------------------
-      // TRY IMAGE IF RAW DID NOT DELETE
-      // ---------------------------------------------------
-
-      if (!deleted) {
-        try {
-          console.log("Trying resource_type: image");
-
-          deleteResult = await cloudinary.api.delete_resources([publicId], {
-            resource_type: "image",
-            type: "upload",
-            invalidate: true,
-          });
-
-          console.log(
-            "IMAGE DELETE RESULT:",
-            JSON.stringify(deleteResult, null, 2),
-          );
-
-          const status = deleteResult?.deleted?.[publicId];
-
-          if (status === "deleted" || status === "not_found") {
-            deleted = true;
-          }
-        } catch (error) {
-          console.error("IMAGE DELETE ERROR:", error?.message);
-        }
-      }
-
-      // ---------------------------------------------------
-      // TRY VIDEO IF STILL NOT DELETED
-      // ---------------------------------------------------
-
-      if (!deleted) {
-        try {
-          console.log("Trying resource_type: video");
-
-          deleteResult = await cloudinary.api.delete_resources([publicId], {
-            resource_type: "video",
-            type: "upload",
-            invalidate: true,
-          });
-
-          console.log(
-            "VIDEO DELETE RESULT:",
-            JSON.stringify(deleteResult, null, 2),
-          );
-
-          const status = deleteResult?.deleted?.[publicId];
-
-          if (status === "deleted" || status === "not_found") {
-            deleted = true;
-          }
-        } catch (error) {
-          console.error("VIDEO DELETE ERROR:", error?.message);
-        }
-      }
-
-      // ---------------------------------------------------
-      // SAVE RESULT
-      // ---------------------------------------------------
-
-      cloudinaryResults.push({
-        resourceId: resource.id,
-        fileName: resource.fileName,
-        publicId,
-        success: deleted,
-        result: deleteResult,
-      });
-
-      // ---------------------------------------------------
-      // STOP DATABASE DELETION IF ACTUAL FAILURE
-      // ---------------------------------------------------
-
-      if (!deleted) {
-        console.error("CLOUDINARY RESOURCE COULD NOT BE DELETED:");
-
-        console.error(publicId);
-
-        return NextResponse.json(
-          {
-            success: false,
-
-            error:
-              "A Cloudinary resource could not be deleted. The seminar was NOT deleted from the database.",
-
-            resource: {
-              id: resource.id,
-              fileName: resource.fileName,
-              publicId: resource.publicId,
-            },
-
-            cloudinaryResults,
-          },
-          {
-            status: 500,
-          },
-        );
+        cloudinaryResults.push({
+          resourceId: resource.id,
+          publicId: resource.publicId,
+          success: false,
+          status: "CLOUDINARY_DELETE_FAILED",
+        });
       }
     }
 
-    // -----------------------------------------------------
-    // 5. ALL CLOUDINARY FILES SUCCESSFULLY HANDLED
-    // -----------------------------------------------------
-
-    console.log("");
-    console.log("All Cloudinary resources processed successfully.");
-
-    // -----------------------------------------------------
-    // 6. DELETE SEMINAR
-    // -----------------------------------------------------
+    // --------------------------------------------------------
+    // DELETE DATABASE RECORD
+    // --------------------------------------------------------
+    //
+    // This deletes:
+    //
+    // Seminar
+    // ├── Resources
+    // └── Registrations
+    //
+    // BUT NOT:
+    //
+    // Student
+    //
+    // because Registration -> Student is separate.
+    // --------------------------------------------------------
 
     await prisma.seminar.delete({
       where: {
@@ -323,50 +682,36 @@ export async function DELETE(request, ctx) {
       },
     });
 
-    console.log("Seminar deleted from PostgreSQL.");
+    // --------------------------------------------------------
+    // RESPONSE
+    // --------------------------------------------------------
 
-    console.log("Student records were preserved.");
+    return NextResponse.json(
+      {
+        success: true,
 
-    console.log("==========================================");
-    console.log("DELETE SEMINAR COMPLETE");
-    console.log("==========================================");
+        message: "Seminar deleted successfully.",
 
-    // -----------------------------------------------------
-    // 7. SUCCESS RESPONSE
-    // -----------------------------------------------------
+        seminarId: id,
 
-    return NextResponse.json({
-      success: true,
+        resourcesDeleted: seminar.resources.length,
 
-      message: "Seminar deleted successfully.",
-
-      deleted: {
-        seminarId: seminar.id,
-
-        resources: seminar.resources.length,
-
-        registrations: seminar._count.registrations,
-
-        students: "Student records preserved",
+        cloudinary: cloudinaryResults,
       },
-
-      cloudinary: cloudinaryResults,
-    });
+      {
+        status: 200,
+      },
+    );
   } catch (error) {
-    console.error("");
-    console.error("==========================================");
-    console.error("DELETE SEMINAR ERROR");
-    console.error("==========================================");
-    console.error(error);
+    console.error("DELETE SEMINAR ERROR:", error);
 
     return NextResponse.json(
       {
         success: false,
-
-        error: error?.message || "Failed to delete seminar",
+        error: "Failed to delete seminar.",
       },
       {
-        status: error?.http_code || 500,
+        status: 500,
       },
     );
   }

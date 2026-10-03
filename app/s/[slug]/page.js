@@ -90,7 +90,7 @@ export default function StudentPage({ params }) {
           throw new Error(data?.error || "Failed to load seminar");
         }
 
-        setSeminar(data);
+        setSeminar(data.seminar);
       } catch (error) {
         console.error("LOAD SEMINAR ERROR:", error);
 
@@ -345,6 +345,70 @@ export default function StudentPage({ params }) {
                     Speaker: {seminar.speakerName}
                   </p>
                 )}
+              </div>
+
+              {/* CERTIFICATE */}
+
+              <div className="mt-6 rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50 via-white to-white p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex items-start gap-4">
+                    <div className="grid h-12 w-12 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700">
+                      <svg
+                        width="22"
+                        height="22"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M12 3v12" />
+                        <path d="m7 10 5 5 5-5" />
+                        <path d="M5 21h14" />
+                        <path d="M5 3h14" />
+                      </svg>
+                    </div>
+
+                    <div>
+                      <p className="text-sm font-bold text-slate-900">
+                        Certificate of Completion
+                      </p>
+
+                      <p className="mt-1 text-xs leading-5 text-slate-500">
+                        Download your official Electrosoft System seminar
+                        completion certificate.
+                      </p>
+                    </div>
+                  </div>
+
+                  <a
+                    href={`/api/certificates/${encodeURIComponent(
+                      registrationId,
+                    )}/download?accessToken=${encodeURIComponent(accessToken)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-amber-600 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-amber-700 focus:outline-none focus:ring-4 focus:ring-amber-600/20"
+                  >
+                    <svg
+                      width="17"
+                      height="17"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M12 3v12" />
+                      <path d="m7 10 5 5 5-5" />
+                      <path d="M5 21h14" />
+                    </svg>
+                    Download Certificate
+                  </a>
+                </div>
               </div>
 
               {/* RESOURCES */}

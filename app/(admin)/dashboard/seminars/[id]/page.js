@@ -5,6 +5,52 @@ import QRCode from "qrcode";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 
+function getResourceViewUrl(resource) {
+  const cloudinaryUrl = resource?.cloudinaryUrl;
+
+  if (!cloudinaryUrl) {
+    return "#";
+  }
+
+  const fileName = resource?.fileName || resource?.title || "";
+
+  const extension = fileName.split(".").pop()?.toLowerCase().trim() || "";
+
+  // ---------------------------------------------------------
+  // PDF
+  // ---------------------------------------------------------
+
+  if (extension === "pdf") {
+    return cloudinaryUrl;
+  }
+
+  // ---------------------------------------------------------
+  // POWERPOINT
+  // ---------------------------------------------------------
+
+  if (["ppt", "pptx"].includes(extension)) {
+    return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+      cloudinaryUrl,
+    )}`;
+  }
+
+  // ---------------------------------------------------------
+  // WORD
+  // ---------------------------------------------------------
+
+  if (["doc", "docx"].includes(extension)) {
+    return `https://view.officeapps.live.com/op/view.aspx?src=${encodeURIComponent(
+      cloudinaryUrl,
+    )}`;
+  }
+
+  // ---------------------------------------------------------
+  // FALLBACK
+  // ---------------------------------------------------------
+
+  return cloudinaryUrl;
+}
+
 export default function SeminarDetail({ params }) {
   const [id, setId] = useState("");
   const [seminar, setSeminar] = useState(null);
@@ -86,7 +132,7 @@ export default function SeminarDetail({ params }) {
 
         const data = await response.json();
 
-        setSeminar(data);
+        setSeminar(data.seminar);
       } catch (err) {
         console.error("LOAD SEMINAR ERROR:", err);
 
@@ -437,7 +483,7 @@ export default function SeminarDetail({ params }) {
 
       const freshData = await freshResponse.json();
 
-      setSeminar(freshData);
+      setSeminar(freshData.seminar);
     } catch (err) {
       console.error("UPLOAD ERROR:", err);
 
@@ -905,11 +951,25 @@ export default function SeminarDetail({ params }) {
 
                     {resource.cloudinaryUrl && (
                       <a
-                        href={resource.cloudinaryUrl}
+                        href={getResourceViewUrl(resource)}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="shrink-0 rounded-lg bg-gray-900 px-4 py-2.5 text-center text-sm font-medium text-white transition hover:bg-gray-800"
+                        className="shrink-0 inline-flex items-center justify-center gap-2 rounded-lg bg-gray-900 px-4 py-2.5 text-center text-sm font-semibold text-white transition hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-900/20"
                       >
+                        <svg
+                          width="17"
+                          height="17"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          aria-hidden="true"
+                        >
+                          <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7S2 12 2 12Z" />
+                          <circle cx="12" cy="12" r="3" />
+                        </svg>
                         View File
                       </a>
                     )}

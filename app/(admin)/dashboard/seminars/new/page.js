@@ -12,12 +12,116 @@ const INITIAL_FORM = {
   description: "",
 };
 
+const MAX_FILE_SIZE = 5 * 1024 * 1024;
+
+const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
+
+function FileUpload({
+  id,
+  label,
+  description,
+  required = false,
+  file,
+  onChange,
+  preview,
+}) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5">
+      <div className="mb-4">
+        <label htmlFor={id} className="block text-sm font-bold text-slate-900">
+          {label}
+
+          {required ? (
+            <span className="ml-1 text-red-500">*</span>
+          ) : (
+            <span className="ml-2 text-xs font-normal text-slate-400">
+              Optional
+            </span>
+          )}
+        </label>
+
+        <p className="mt-1 text-xs leading-5 text-slate-500">{description}</p>
+      </div>
+
+      <label
+        htmlFor={id}
+        className="group flex cursor-pointer flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50 px-5 py-7 text-center transition hover:border-blue-400 hover:bg-blue-50/40"
+      >
+        {preview ? (
+          <div className="flex w-full flex-col items-center">
+            <div className="flex h-28 w-full items-center justify-center rounded-xl border border-slate-200 bg-white p-4">
+              <img
+                src={preview}
+                alt={`${label} preview`}
+                className="max-h-20 max-w-full object-contain"
+              />
+            </div>
+
+            <p className="mt-3 max-w-full truncate text-sm font-semibold text-slate-700">
+              {file?.name}
+            </p>
+
+            <p className="mt-1 text-xs text-blue-600">Click to replace</p>
+          </div>
+        ) : (
+          <>
+            <div className="grid h-12 w-12 place-items-center rounded-xl bg-white text-slate-500 shadow-sm">
+              <svg
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M12 16V4" />
+                <path d="m7 9 5-5 5 5" />
+                <path d="M4 20h16" />
+              </svg>
+            </div>
+
+            <p className="mt-3 text-sm font-bold text-slate-700">
+              Upload {label}
+            </p>
+
+            <p className="mt-1 text-xs text-slate-400">
+              PNG, JPG, JPEG or WEBP • Maximum 5 MB
+            </p>
+          </>
+        )}
+
+        <input
+          id={id}
+          name={id}
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
+          onChange={onChange}
+        />
+      </label>
+    </div>
+  );
+}
+
 export default function NewSeminarPage() {
   const router = useRouter();
 
   const [form, setForm] = useState(INITIAL_FORM);
+
+  const [trainerSignature, setTrainerSignature] = useState(null);
+
+  const [authorizedSignature, setAuthorizedSignature] = useState(null);
+
+  const [trainerPreview, setTrainerPreview] = useState("");
+
+  const [authorizedPreview, setAuthorizedPreview] = useState("");
+
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [uploadingAssets, setUploadingAssets] = useState(false);
 
   const today = new Date().toISOString().split("T")[0];
 
@@ -35,6 +139,80 @@ export default function NewSeminarPage() {
 
     if (error) {
       setError("");
+    }
+  }
+
+  // ---------------------------------------------------------
+  // FILE VALIDATION
+  // ---------------------------------------------------------
+
+  function validateFile(file, label) {
+    if (!file) {
+      return null;
+    }
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return `${label} must be PNG, JPG, JPEG or WEBP.`;
+    }
+
+    if (file.size <= 0) {
+      return `${label} is empty.`;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      return `${label} cannot exceed 5 MB.`;
+    }
+
+    return null;
+  }
+
+  // ---------------------------------------------------------
+  // FILE CHANGE
+  // ---------------------------------------------------------
+
+  function handleFileChange(event, type) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    let label = "";
+
+    if (type === "trainer") {
+      label = "Industrial Trainer signature";
+    }
+
+    if (type === "authorized") {
+      label = "Authorized signature";
+    }
+
+    const validationError = validateFile(file, label);
+
+    if (validationError) {
+      setError(validationError);
+      event.target.value = "";
+      return;
+    }
+
+    setError("");
+
+    const previewUrl = URL.createObjectURL(file);
+
+    if (type === "trainer") {
+      setTrainerSignature(file);
+      setTrainerPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return previewUrl;
+      });
+    }
+
+    if (type === "authorized") {
+      setAuthorizedSignature(file);
+      setAuthorizedPreview((old) => {
+        if (old) URL.revokeObjectURL(old);
+        return previewUrl;
+      });
     }
   }
 
@@ -88,13 +266,69 @@ export default function NewSeminarPage() {
   }
 
   // ---------------------------------------------------------
+  // UPLOAD CERTIFICATE ASSETS
+  // ---------------------------------------------------------
+
+  async function uploadCertificateAssets(seminarId) {
+    const hasAssets = trainerSignature || authorizedSignature;
+
+    if (!hasAssets) {
+      return;
+    }
+
+    setUploadingAssets(true);
+
+    const formData = new FormData();
+
+    if (trainerSignature) {
+      formData.append("trainerSignature", trainerSignature);
+    }
+
+    if (authorizedSignature) {
+      formData.append("authorizedSignature", authorizedSignature);
+    }
+
+    const response = await fetch(
+      `/api/seminars/${seminarId}/certificate-assets`,
+      {
+        method: "POST",
+        body: formData,
+      },
+    );
+
+    const contentType = response.headers.get("content-type") || "";
+
+    let data;
+
+    if (contentType.includes("application/json")) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+
+      data = {
+        error: text || `Server returned status ${response.status}`,
+      };
+    }
+
+    if (!response.ok) {
+      throw new Error(
+        data?.error || "Certificate assets could not be uploaded.",
+      );
+    }
+
+    return data;
+  }
+
+  // ---------------------------------------------------------
   // CREATE SEMINAR
   // ---------------------------------------------------------
 
   async function handleSubmit(event) {
     event.preventDefault();
 
-    if (loading) return;
+    if (loading) {
+      return;
+    }
 
     setError("");
 
@@ -115,6 +349,10 @@ export default function NewSeminarPage() {
         seminarDate: form.seminarDate,
         description: form.description.trim(),
       };
+
+      // -----------------------------------------------------
+      // CREATE SEMINAR
+      // -----------------------------------------------------
 
       const response = await fetch("/api/seminars", {
         method: "POST",
@@ -149,7 +387,18 @@ export default function NewSeminarPage() {
         );
       }
 
+      // -----------------------------------------------------
+      // UPLOAD CERTIFICATE ASSETS
+      // -----------------------------------------------------
+
+      await uploadCertificateAssets(data.id);
+
+      // -----------------------------------------------------
+      // REDIRECT
+      // -----------------------------------------------------
+
       router.push(`/dashboard/seminars/${data.id}`);
+
       router.refresh();
     } catch (error) {
       console.error("CREATE SEMINAR ERROR:", error);
@@ -159,12 +408,9 @@ export default function NewSeminarPage() {
       );
     } finally {
       setLoading(false);
+      setUploadingAssets(false);
     }
   }
-
-  // ---------------------------------------------------------
-  // CANCEL
-  // ---------------------------------------------------------
 
   // ---------------------------------------------------------
   // UI
@@ -172,18 +418,10 @@ export default function NewSeminarPage() {
 
   return (
     <main className="min-h-screen bg-slate-50">
-      {/* =====================================================
-          TOP NAVIGATION
-      ====================================================== */}
-
       <Header loading={loading} />
 
-      {/* =====================================================
-          PAGE CONTENT
-      ====================================================== */}
-
       <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 lg:py-12">
-        {/* PAGE HEADING */}
+        {/* HEADER */}
 
         <div className="mb-8">
           <div className="mb-4 flex items-center gap-2">
@@ -194,32 +432,28 @@ export default function NewSeminarPage() {
             </span>
           </div>
 
-          <div className="max-w-3xl">
-            <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
-              Create a new seminar
-            </h1>
+          <h1 className="text-3xl font-black tracking-tight text-slate-950 sm:text-4xl">
+            Create a new seminar
+          </h1>
 
-            <p className="mt-3 text-sm leading-6 text-slate-500 sm:text-base">
-              Create your seminar first, then upload presentation files,
-              generate a QR code, and share the registration page with students.
-            </p>
-          </div>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-500 sm:text-base">
+            Create your seminar, configure the certificate, upload presentation
+            resources and generate your student registration QR code.
+          </p>
         </div>
 
-        {/* =====================================================
-            MAIN CARD
-        ====================================================== */}
+        {/* FORM */}
 
         <form
           onSubmit={handleSubmit}
           noValidate
           className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_10px_40px_rgba(15,23,42,0.06)]"
         >
-          {/* CARD HEADER */}
+          {/* BASIC INFORMATION */}
 
           <div className="border-b border-slate-200 bg-linear-to-r from-slate-50 to-white px-5 py-6 sm:px-8">
             <div className="flex items-start gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm shadow-blue-600/20">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-600 text-white shadow-sm">
                 <svg
                   width="21"
                   height="21"
@@ -239,8 +473,6 @@ export default function NewSeminarPage() {
                   <path d="M8 14h.01" />
                   <path d="M12 14h.01" />
                   <path d="M16 14h.01" />
-                  <path d="M8 18h.01" />
-                  <path d="M12 18h.01" />
                 </svg>
               </div>
 
@@ -249,45 +481,39 @@ export default function NewSeminarPage() {
                   Seminar Information
                 </h2>
 
-                <p className="mt-1 text-sm leading-5 text-slate-500">
+                <p className="mt-1 text-sm text-slate-500">
                   Enter the basic information for your seminar.
                 </p>
               </div>
             </div>
           </div>
 
-          {/* FORM BODY */}
-
-          <div className="space-y-8 p-5 sm:p-8">
-            {/* =================================================
-                ERROR MESSAGE
-            ================================================== */}
+          <div className="space-y-10 p-5 sm:p-8">
+            {/* ERROR */}
 
             {error && (
               <div
                 role="alert"
                 className="flex gap-3 rounded-xl border border-red-200 bg-red-50 p-4"
               >
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 text-sm font-bold text-red-600">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-red-100 font-bold text-red-600">
                   !
                 </div>
 
                 <div>
                   <p className="text-sm font-bold text-red-900">
-                    Unable to create seminar
+                    Unable to complete request
                   </p>
 
-                  <p className="mt-1 text-sm leading-5 text-red-700">{error}</p>
+                  <p className="mt-1 text-sm text-red-700">{error}</p>
                 </div>
               </div>
             )}
 
-            {/* =================================================
-                TITLE
-            ================================================== */}
+            {/* TITLE */}
 
             <div>
-              <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="mb-2 flex items-center justify-between">
                 <label
                   htmlFor="title"
                   className="text-sm font-bold text-slate-800"
@@ -309,24 +535,14 @@ export default function NewSeminarPage() {
                 onChange={handleChange}
                 placeholder="e.g. Full Stack Web Development Seminar"
                 maxLength={150}
-                autoComplete="off"
                 required
-                className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
               />
-
-              <p className="mt-2 text-xs text-slate-400">
-                Use a short and descriptive title that students can easily
-                understand.
-              </p>
             </div>
 
-            {/* =================================================
-                COLLEGE + SPEAKER
-            ================================================== */}
+            {/* COLLEGE + SPEAKER */}
 
             <div className="grid gap-6 md:grid-cols-2">
-              {/* COLLEGE */}
-
               <div>
                 <label
                   htmlFor="collegeName"
@@ -344,13 +560,10 @@ export default function NewSeminarPage() {
                   onChange={handleChange}
                   placeholder="e.g. Government Polytechnic Pune"
                   maxLength={200}
-                  autoComplete="organization"
                   required
-                  className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                 />
               </div>
-
-              {/* SPEAKER */}
 
               <div>
                 <label
@@ -371,15 +584,12 @@ export default function NewSeminarPage() {
                   onChange={handleChange}
                   placeholder="e.g. Nikhil Kandhare"
                   maxLength={150}
-                  autoComplete="name"
-                  className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                  className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
                 />
               </div>
             </div>
 
-            {/* =================================================
-                DATE
-            ================================================== */}
+            {/* DATE */}
 
             <div className="max-w-md">
               <label
@@ -390,30 +600,22 @@ export default function NewSeminarPage() {
                 <span className="ml-1 text-red-500">*</span>
               </label>
 
-              <div className="relative">
-                <input
-                  id="seminarDate"
-                  name="seminarDate"
-                  type="date"
-                  value={form.seminarDate}
-                  onChange={handleChange}
-                  min={today}
-                  required
-                  className="h-12 w-full rounded-xl border border-slate-300 bg-white px-4 text-sm text-slate-900 shadow-sm outline-none transition hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
-                />
-              </div>
-
-              <p className="mt-2 text-xs text-slate-400">
-                Select the scheduled date of the seminar.
-              </p>
+              <input
+                id="seminarDate"
+                name="seminarDate"
+                type="date"
+                value={form.seminarDate}
+                onChange={handleChange}
+                min={today}
+                required
+                className="h-12 w-full rounded-xl border border-slate-300 px-4 text-sm outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+              />
             </div>
 
-            {/* =================================================
-                DESCRIPTION
-            ================================================== */}
+            {/* DESCRIPTION */}
 
             <div>
-              <div className="mb-2 flex items-center justify-between gap-3">
+              <div className="mb-2 flex items-center justify-between">
                 <label
                   htmlFor="description"
                   className="text-sm font-bold text-slate-800"
@@ -437,18 +639,79 @@ export default function NewSeminarPage() {
                 rows={6}
                 maxLength={2000}
                 placeholder="Describe the seminar, topics covered, learning objectives, or additional information..."
-                className="w-full resize-y rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm leading-6 text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 hover:border-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
+                className="w-full resize-y rounded-xl border border-slate-300 px-4 py-3 text-sm leading-6 outline-none transition placeholder:text-slate-400 focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
               />
-
-              <p className="mt-2 text-xs text-slate-400">
-                This information can be displayed to students on the public
-                seminar page.
-              </p>
             </div>
 
             {/* =================================================
-                NEXT STEPS
-            ================================================== */}
+                CERTIFICATE CONFIGURATION
+            ================================================= */}
+
+            <section className="overflow-hidden rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50/60 via-white to-white">
+              <div className="border-b border-amber-100 px-5 py-5 sm:px-6">
+                <div className="flex items-start gap-4">
+                  <div className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-amber-100 text-amber-700">
+                    <svg
+                      width="21"
+                      height="21"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      aria-hidden="true"
+                    >
+                      <path d="M4 4h16v16H4z" />
+                      <path d="M8 8h8" />
+                      <path d="M8 12h8" />
+                      <path d="M8 16h4" />
+                    </svg>
+                  </div>
+
+                  <div>
+                    <h2 className="font-bold text-slate-950">
+                      Certificate Configuration
+                    </h2>
+
+                    <p className="mt-1 max-w-2xl text-sm leading-5 text-slate-500">
+                      Upload the signature assets that will be automatically
+                      placed on student completion certificates.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-5 p-5 sm:p-6 lg:grid-cols-3">
+                <FileUpload
+                  id="trainerSignature"
+                  label="Industrial Trainer Signature"
+                  description="Digital signature shown above the Industrial Trainer label."
+                  file={trainerSignature}
+                  preview={trainerPreview}
+                  onChange={(event) => handleFileChange(event, "trainer")}
+                />
+
+                <FileUpload
+                  id="authorizedSignature"
+                  label="Authorized Signature"
+                  description="Signature shown above the Authorized Signatory label."
+                  file={authorizedSignature}
+                  preview={authorizedPreview}
+                  onChange={(event) => handleFileChange(event, "authorized")}
+                />
+              </div>
+
+              <div className="border-t border-amber-100 bg-amber-50/50 px-5 py-4 sm:px-6">
+                <p className="text-xs leading-5 text-amber-800">
+                  <strong>Certificate tip:</strong> Use transparent PNG files
+                  for signatures whenever possible. This gives the generated
+                  certificate a clean professional appearance.
+                </p>
+              </div>
+            </section>
+
+            {/* NEXT STEPS */}
 
             <div className="overflow-hidden rounded-2xl border border-blue-100 bg-blue-50/70">
               <div className="border-b border-blue-100 px-5 py-4">
@@ -457,14 +720,14 @@ export default function NewSeminarPage() {
                 </h3>
 
                 <p className="mt-1 text-xs leading-5 text-blue-700">
-                  After creating the seminar, you will be able to prepare
-                  everything students need.
+                  After creating the seminar, you can complete the seminar setup
+                  from its management page.
                 </p>
               </div>
 
               <div className="grid gap-px bg-blue-100 sm:grid-cols-3">
                 <div className="bg-blue-50/70 p-5">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
+                  <div className="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
                     01
                   </div>
 
@@ -478,47 +741,43 @@ export default function NewSeminarPage() {
                 </div>
 
                 <div className="bg-blue-50/70 p-5">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
+                  <div className="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
                     02
                   </div>
 
                   <p className="text-sm font-bold text-blue-950">Generate QR</p>
 
                   <p className="mt-1 text-xs leading-5 text-blue-700">
-                    Generate a unique QR code for the seminar.
+                    Generate and share the seminar registration QR.
                   </p>
                 </div>
 
                 <div className="bg-blue-50/70 p-5">
-                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
+                  <div className="mb-3 grid h-9 w-9 place-items-center rounded-lg bg-white text-sm font-bold text-blue-600 shadow-sm">
                     03
                   </div>
 
                   <p className="text-sm font-bold text-blue-950">
-                    Students Register
+                    Issue Certificates
                   </p>
 
                   <p className="mt-1 text-xs leading-5 text-blue-700">
-                    Students scan the QR and access your resources after
-                    registration.
+                    Generate completion certificates using the configured
+                    signatures.
                   </p>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* =================================================
-              FOOTER ACTIONS
-          ================================================== */}
+          {/* FOOTER */}
 
           <div className="flex flex-col-reverse gap-3 border-t border-slate-200 bg-slate-50/70 px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
             <button
               type="button"
-              onClick={() => {
-                router.push("/dashboard");
-              }}
+              onClick={() => router.push("/dashboard")}
               disabled={loading}
-              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 hover:text-slate-950 focus:outline-none focus:ring-4 focus:ring-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+              className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
             >
               Cancel
             </button>
@@ -526,12 +785,15 @@ export default function NewSeminarPage() {
             <button
               type="submit"
               disabled={loading}
-              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-4 focus:ring-slate-900/10 disabled:cursor-not-allowed disabled:opacity-60"
+              className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-slate-950 px-6 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
             >
               {loading ? (
                 <>
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                  Creating Seminar...
+
+                  {uploadingAssets
+                    ? "Uploading Certificate Assets..."
+                    : "Creating Seminar..."}
                 </>
               ) : (
                 <>

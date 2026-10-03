@@ -186,6 +186,7 @@ export default function Login() {
                 </div>
 
                 <input
+                  suppressHydrationWarning
                   id="email"
                   name="email"
                   type="email"

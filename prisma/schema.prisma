@@ -39,12 +39,25 @@ model Seminar {
   speakerName String?
   seminarDate DateTime
   status      SeminarStatus @default(DRAFT)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
+
+  // Certificate fields
+  program               String?
+  subject               String?
+  duration              String?
+  trainerSignatureUrl   String?
+  trainerSignaturePublicId String?
+  authorizedSignatureUrl String?
+  authorizedSignaturePublicId String?
+  stampUrl              String?
+  stampPublicId         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   registrations Registration[]
   resources     Resource[]
 }
+
 
 model Student {
   id        String   @id @default(cuid())
@@ -61,7 +74,7 @@ model Registration {
   id           String   @id @default(cuid())
   studentId    String
   seminarId    String
-  accessToken  String   @unique
+  accessToken String? @unique
   registeredAt DateTime @default(now())
 
   student Student @relation(fields: [studentId], references: [id], onDelete: Cascade)

@@ -12,14 +12,18 @@
     "db:seed": "node prisma/seed.js"
   },
   "dependencies": {
+    "@pdf-lib/fontkit": "^1.1.1",
     "@prisma/client": "^6.16.0",
     "bcryptjs": "^3.0.2",
     "cloudinary": "^2.7.0",
+    "fontkit": "^2.0.4",
     "jose": "^6.1.0",
     "next": "^16.0.0",
+    "pdf-lib": "^1.17.1",
     "qrcode": "^1.5.4",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
+    "sharp": "^0.35.5",
     "xlsx": "^0.18.5",
     "zod": "^4.1.0"
   },
