@@ -103,10 +103,6 @@ export default function StudentPage({ params }) {
     loadSeminar();
   }, [slug]);
 
-  // ---------------------------------------------------------
-  // FORM CHANGE
-  // ---------------------------------------------------------
-
   function change(event) {
     const { name, value } = event.target;
 
