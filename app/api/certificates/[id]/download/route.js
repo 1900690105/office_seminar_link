@@ -613,9 +613,27 @@ export async function GET(request, { params }) {
       where: {
         id,
       },
+
       include: {
         student: true,
-        seminar: true,
+        seminar: {
+          include: {
+            trainerSignatureStaff: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+            authorizedSignatureStaff: {
+              select: {
+                id: true,
+                name: true,
+                imageUrl: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -978,10 +996,20 @@ export async function GET(request, { params }) {
      * =======================================================
      */
 
+    const trainerSignatureUrl =
+      seminar.trainerSignatureStaff?.imageUrl ||
+      seminar.trainerSignatureUrl ||
+      null;
+
+    const authorizedSignatureUrl =
+      seminar.authorizedSignatureStaff?.imageUrl ||
+      seminar.authorizedSignatureUrl ||
+      null;
+
     const [trainerSignatureData, authorizedSignatureData, stampBytes] =
       await Promise.all([
-        fetchImageBytes(seminar.trainerSignatureUrl),
-        fetchImageBytes(seminar.authorizedSignatureUrl),
+        fetchImageBytes(trainerSignatureUrl),
+        fetchImageBytes(authorizedSignatureUrl),
         loadFile(STAMP_PATH, "Certificate stamp"),
       ]);
 

@@ -56,6 +56,31 @@ model Seminar {
 
   registrations Registration[]
   resources     Resource[]
+
+  trainerSignatureStaffId    String?
+  authorizedSignatureStaffId String?
+
+  trainerSignatureStaff StaffSignature? @relation("TrainerSignature",fields: [trainerSignatureStaffId],references: [id],onDelete: SetNull)
+
+  authorizedSignatureStaff StaffSignature? @relation("AuthorizedSignature",fields: [authorizedSignatureStaffId],references: [id],onDelete: SetNull)
+}
+
+model StaffSignature {
+  id        String   @id @default(cuid())
+  name      String
+  role      String?
+  imageUrl  String
+  publicId  String?
+  isActive  Boolean  @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  trainerForSeminars Seminar[] @relation("TrainerSignature")
+  authorizedForSeminars Seminar[] @relation("AuthorizedSignature")
+
+  @@index([isActive])
+  @@index([name])
 }
 
 

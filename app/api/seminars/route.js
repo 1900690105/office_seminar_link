@@ -4,10 +4,8 @@ import { getAdmin } from "@/lib/auth";
 import { makeSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
-/**
- * Maximum lengths used for validation.
- */
 const LIMITS = {
   title: 150,
   collegeName: 200,
@@ -18,48 +16,51 @@ const LIMITS = {
   duration: 100,
 };
 
-/**
- * Convert unknown input into a trimmed string.
- */
 function cleanString(value) {
-  if (typeof value !== "string") {
-    return "";
-  }
-
-  return value.trim();
+  return typeof value === "string" ? value.trim() : "";
 }
 
-/**
- * Safely parse a date.
- */
 function parseDate(value) {
   if (!value || typeof value !== "string") {
     return null;
   }
 
-  const date = new Date(value);
+  // The form sends YYYY-MM-DD. Parse it consistently as a calendar date
+  // instead of relying on the server's local timezone.
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
 
-  if (Number.isNaN(date.getTime())) {
-    return null;
+  if (match) {
+    const year = Number(match[1]);
+    const month = Number(match[2]);
+    const day = Number(match[3]);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
+    if (
+      date.getUTCFullYear() !== year ||
+      date.getUTCMonth() !== month - 1 ||
+      date.getUTCDate() !== day
+    ) {
+      return null;
+    }
+
+    return date;
   }
 
-  return date;
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
-/**
- * Create a unique seminar slug.
- *
- * Example:
- * Full Stack Web Development
- *
- * becomes:
- * full-stack-web-development
- *
- * If that slug already exists:
- *
- * full-stack-web-development-2
- * full-stack-web-development-3
- */
+function errorResponse(error, status = 400) {
+  return NextResponse.json(
+    { success: false, error },
+    {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    },
+  );
+}
+
 async function createUniqueSlug(title) {
   const baseSlug = makeSlug(title);
 
@@ -72,12 +73,8 @@ async function createUniqueSlug(title) {
 
   while (true) {
     const existing = await prisma.seminar.findUnique({
-      where: {
-        slug,
-      },
-      select: {
-        id: true,
-      },
+      where: { slug },
+      select: { id: true },
     });
 
     if (!existing) {
@@ -91,264 +88,157 @@ async function createUniqueSlug(title) {
 
 export async function POST(request) {
   try {
-    // =====================================================
-    // 1. ADMIN AUTHENTICATION
-    // =====================================================
-
+    // 1. Authenticate administrator.
     const admin = await getAdmin();
 
     if (!admin) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Unauthorized",
-        },
-        {
-          status: 401,
-        },
-      );
+      return errorResponse("Unauthorized.", 401);
     }
 
-    // =====================================================
-    // 2. READ REQUEST BODY
-    // =====================================================
-
+    // 2. Parse request.
     let body;
 
     try {
       body = await request.json();
     } catch {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid JSON request body.",
-        },
-        {
-          status: 400,
-        },
-      );
+      return errorResponse("Invalid JSON request body.", 400);
     }
 
-    if (!body || typeof body !== "object") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Invalid request data.",
-        },
-        {
-          status: 400,
-        },
-      );
+    if (!body || typeof body !== "object" || Array.isArray(body)) {
+      return errorResponse("Invalid request data.", 400);
     }
 
-    // =====================================================
-    // 3. CLEAN INPUT
-    // =====================================================
-
+    // 3. Clean text inputs.
     const title = cleanString(body.title);
     const collegeName = cleanString(body.collegeName);
     const speakerName = cleanString(body.speakerName);
     const description = cleanString(body.description);
-
     const program = cleanString(body.program);
     const subject = cleanString(body.subject);
     const duration = cleanString(body.duration);
 
-    // =====================================================
-    // 4. REQUIRED FIELD VALIDATION
-    // =====================================================
+    const trainerStaffId = cleanString(body.trainerSignatureStaffId);
+    const authorizedStaffId = cleanString(body.authorizedSignatureStaffId);
 
-    if (!title) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Seminar title is required.",
-        },
-        {
-          status: 400,
-        },
+    // 4. Required fields.
+    if (!title || title.length < 3) {
+      return errorResponse(
+        "Seminar title must contain at least 3 characters.",
+        400,
       );
     }
 
-    if (title.length < 3) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Seminar title must contain at least 3 characters.",
-        },
-        {
-          status: 400,
-        },
-      );
+    if (!collegeName || collegeName.length < 2) {
+      return errorResponse("Please provide a valid college name.", 400);
     }
 
-    if (!collegeName) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "College name is required.",
-        },
-        {
-          status: 400,
-        },
-      );
+    // 5. Length limits.
+    const fields = [
+      ["title", title, LIMITS.title],
+      ["college name", collegeName, LIMITS.collegeName],
+      ["speaker name", speakerName, LIMITS.speakerName],
+      ["description", description, LIMITS.description],
+      ["program", program, LIMITS.program],
+      ["subject", subject, LIMITS.subject],
+      ["duration", duration, LIMITS.duration],
+    ];
+
+    for (const [label, value, limit] of fields) {
+      if (value.length > limit) {
+        return errorResponse(
+          `${label.charAt(0).toUpperCase() + label.slice(1)} cannot exceed ${limit} characters.`,
+          400,
+        );
+      }
     }
 
-    // =====================================================
-    // 5. LENGTH VALIDATION
-    // =====================================================
-
-    if (title.length > LIMITS.title) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Seminar title cannot exceed ${LIMITS.title} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (collegeName.length > LIMITS.collegeName) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `College name cannot exceed ${LIMITS.collegeName} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (speakerName.length > LIMITS.speakerName) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Speaker name cannot exceed ${LIMITS.speakerName} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (description.length > LIMITS.description) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Description cannot exceed ${LIMITS.description} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (program.length > LIMITS.program) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Program cannot exceed ${LIMITS.program} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (subject.length > LIMITS.subject) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Subject cannot exceed ${LIMITS.subject} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    if (duration.length > LIMITS.duration) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: `Duration cannot exceed ${LIMITS.duration} characters.`,
-        },
-        {
-          status: 400,
-        },
-      );
-    }
-
-    // =====================================================
-    // 6. SEMINAR DATE
-    // =====================================================
-
+    // 6. Validate seminar date.
     const seminarDate = parseDate(body.seminarDate);
 
     if (!seminarDate) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "A valid seminar date is required.",
-        },
-        {
-          status: 400,
-        },
-      );
+      return errorResponse("A valid seminar date is required.", 400);
     }
 
-    // =====================================================
-    // 7. GENERATE UNIQUE SLUG
-    // =====================================================
+    // 7. Validate selected reusable signatures.
+    // Only active entries in the library may be selected for new seminars.
+    const selectedIds = [
+      ...new Set([trainerStaffId, authorizedStaffId].filter(Boolean)),
+    ];
 
+    let staffSignatures = [];
+
+    if (selectedIds.length > 0) {
+      staffSignatures = await prisma.staffSignature.findMany({
+        where: {
+          id: { in: selectedIds },
+          isActive: true,
+        },
+        select: {
+          id: true,
+          name: true,
+          imageUrl: true,
+          publicId: true,
+        },
+      });
+
+      const foundIds = new Set(
+        staffSignatures.map((signature) => signature.id),
+      );
+
+      const invalidIds = selectedIds.filter((id) => !foundIds.has(id));
+
+      if (invalidIds.length > 0) {
+        return errorResponse(
+          "One or more selected staff signatures do not exist or are inactive. Refresh the signature library and try again.",
+          400,
+        );
+      }
+    }
+
+    const trainerStaff = trainerStaffId
+      ? staffSignatures.find((signature) => signature.id === trainerStaffId)
+      : null;
+
+    const authorizedStaff = authorizedStaffId
+      ? staffSignatures.find((signature) => signature.id === authorizedStaffId)
+      : null;
+
+    // 8. Generate unique slug.
     const slug = await createUniqueSlug(title);
 
-    // =====================================================
-    // 8. CREATE SEMINAR
-    // =====================================================
-
+    // 9. Create seminar with selected staff signatures.
+    // If a reusable signature is selected, its stored image details take
+    // precedence over legacy signature URL values from older clients.
     const seminar = await prisma.seminar.create({
       data: {
         title,
         slug,
-
         collegeName,
-
         speakerName: speakerName || null,
-
         description: description || null,
-
         seminarDate,
-
-        // New seminars remain draft until
-        // the admin explicitly publishes them.
         status: "DRAFT",
 
-        // =================================================
-        // CERTIFICATE CONFIGURATION
-        // =================================================
-
         program: program || null,
-
         subject: subject || null,
-
         duration: duration || null,
 
-        trainerSignatureUrl: cleanString(body.trainerSignatureUrl) || null,
-
+        trainerSignatureStaffId: trainerStaff?.id ?? null,
+        trainerSignatureUrl:
+          trainerStaff?.imageUrl ??
+          (cleanString(body.trainerSignatureUrl) || null),
         trainerSignaturePublicId:
-          cleanString(body.trainerSignaturePublicId) || null,
+          trainerStaff?.publicId ??
+          (cleanString(body.trainerSignaturePublicId) || null),
 
+        authorizedSignatureStaffId: authorizedStaff?.id ?? null,
         authorizedSignatureUrl:
-          cleanString(body.authorizedSignatureUrl) || null,
-
+          authorizedStaff?.imageUrl ??
+          (cleanString(body.authorizedSignatureUrl) || null),
         authorizedSignaturePublicId:
-          cleanString(body.authorizedSignaturePublicId) || null,
+          authorizedStaff?.publicId ??
+          (cleanString(body.authorizedSignaturePublicId) || null),
       },
-
       select: {
         id: true,
         title: true,
@@ -363,9 +253,11 @@ export async function POST(request) {
         subject: true,
         duration: true,
 
+        trainerSignatureStaffId: true,
         trainerSignatureUrl: true,
         trainerSignaturePublicId: true,
 
+        authorizedSignatureStaffId: true,
         authorizedSignatureUrl: true,
         authorizedSignaturePublicId: true,
 
@@ -373,10 +265,6 @@ export async function POST(request) {
         updatedAt: true,
       },
     });
-
-    // =====================================================
-    // 9. SUCCESS RESPONSE
-    // =====================================================
 
     return NextResponse.json(
       {
@@ -387,39 +275,19 @@ export async function POST(request) {
       },
       {
         status: 201,
+        headers: { "Cache-Control": "no-store" },
       },
     );
   } catch (error) {
     console.error("CREATE SEMINAR ERROR:", error);
 
-    // =====================================================
-    // PRISMA UNIQUE CONSTRAINT
-    // =====================================================
-
     if (error?.code === "P2002") {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "A seminar with this information already exists.",
-        },
-        {
-          status: 409,
-        },
+      return errorResponse(
+        "A seminar with this slug already exists. Please try again.",
+        409,
       );
     }
 
-    // =====================================================
-    // GENERIC ERROR
-    // =====================================================
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: "Unable to create seminar. Please try again.",
-      },
-      {
-        status: 500,
-      },
-    );
+    return errorResponse("Unable to create seminar. Please try again.", 500);
   }
 }
