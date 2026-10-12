@@ -253,16 +253,27 @@ export default async function Dashboard() {
                 manage registrations, and issue certificates from one place.
               </p>
             </div>
+            <div className="flex gap-2">
+              <Link
+                href="/dashboard/staff-signatures"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto"
+              >
+                <span className="text-lg leading-none" aria-hidden="true">
+                  +
+                </span>
+                Add Segnature
+              </Link>
 
-            <Link
-              href="/dashboard/seminars/new"
-              className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto"
-            >
-              <span className="text-lg leading-none" aria-hidden="true">
-                +
-              </span>
-              Create Seminar
-            </Link>
+              <Link
+                href="/dashboard/seminars/new"
+                className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto"
+              >
+                <span className="text-lg leading-none" aria-hidden="true">
+                  +
+                </span>
+                Create Seminar
+              </Link>
+            </div>
           </div>
         </section>
 
