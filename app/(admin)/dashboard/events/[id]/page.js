@@ -106,7 +106,7 @@ export default function SeminarDetail({ params }) {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`/api/seminars/${id}`, {
+        const response = await fetch(`/api/events/${id}`, {
           method: "GET",
           headers: {
             Accept: "application/json",
@@ -120,7 +120,7 @@ export default function SeminarDetail({ params }) {
           const text = await response.text();
 
           throw new Error(
-            text || `Failed to load seminar (${response.status})`,
+            text || `Failed to load seminar (${response?.status})`,
           );
         }
 
@@ -163,7 +163,7 @@ export default function SeminarDetail({ params }) {
     try {
       setError("");
 
-      const response = await fetch(`/api/seminars/${id}`, {
+      const response = await fetch(`/api/events/${id}`, {
         method: "DELETE",
       });
 
@@ -433,7 +433,7 @@ export default function SeminarDetail({ params }) {
 
       formData.append("title", title.trim() || file.name);
 
-      const response = await fetch(`/api/seminars/${id}/resources`, {
+      const response = await fetch(`/api/events/${id}/resources`, {
         method: "POST",
         body: formData,
       });
@@ -467,7 +467,7 @@ export default function SeminarDetail({ params }) {
       }
 
       // Refresh seminar
-      const freshResponse = await fetch(`/api/seminars/${id}`, {
+      const freshResponse = await fetch(`/api/events/${id}`, {
         headers: {
           Accept: "application/json",
         },

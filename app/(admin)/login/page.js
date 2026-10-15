@@ -104,7 +104,7 @@ export default function Login() {
                 </p>
 
                 <p className="mt-0.5 text-xs text-slate-500">
-                  Seminar Management Platform
+                  Event Management Platform
                 </p>
               </div>
             </div>

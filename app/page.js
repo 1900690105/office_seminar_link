@@ -35,7 +35,7 @@ export default async function Dashboard() {
             <p className="text-slate-500">Manage your college seminars.</p>
           </div>
           <Link
-            href="/dashboard/seminars/new"
+            href="/dashboard/events/new"
             className="rounded-lg bg-slate-900 px-4 py-3 font-semibold text-white"
           >
             + Create Seminar
@@ -64,7 +64,7 @@ export default async function Dashboard() {
               {recent.map((s) => (
                 <Link
                   key={s.id}
-                  href={`/dashboard/seminars/${s.id}`}
+                  href={`/dashboard/events/${s.id}`}
                   className="flex items-center justify-between p-5 hover:bg-slate-50"
                 >
                   <div>

@@ -32,7 +32,7 @@ export default function StudentPage({ params }) {
         const currentSlug = resolvedParams?.slug || "";
 
         if (!currentSlug) {
-          setError("Invalid seminar link");
+          setError("Invalid event link");
           setLoading(false);
           return;
         }
@@ -41,7 +41,7 @@ export default function StudentPage({ params }) {
       } catch (error) {
         console.error("PARAM ERROR:", error);
 
-        setError("Invalid seminar link");
+        setError("Invalid event link");
         setLoading(false);
       }
     }
@@ -62,7 +62,7 @@ export default function StudentPage({ params }) {
         setError("");
 
         const response = await fetch(
-          `/api/seminars/public/${encodeURIComponent(slug)}`,
+          `/api/events/public/${encodeURIComponent(slug)}`,
           {
             method: "GET",
             headers: {
@@ -77,7 +77,7 @@ export default function StudentPage({ params }) {
         if (!contentType.includes("application/json")) {
           const text = await response.text();
 
-          console.error("Invalid seminar response:", response.status, text);
+          console.error("Invalid event response:", response.status, text);
 
           throw new Error(
             `Server returned unexpected response (${response.status})`,
@@ -87,14 +87,14 @@ export default function StudentPage({ params }) {
         const data = await response.json();
 
         if (!response.ok) {
-          throw new Error(data?.error || "Failed to load seminar");
+          throw new Error(data?.error || "Failed to load event");
         }
 
         setSeminar(data.seminar);
       } catch (error) {
-        console.error("LOAD SEMINAR ERROR:", error);
+        console.error("LOAD event ERROR:", error);
 
-        setError(error?.message || "Unable to load seminar");
+        setError(error?.message || "Unable to load event");
       } finally {
         setLoading(false);
       }
@@ -172,7 +172,7 @@ export default function StudentPage({ params }) {
     }
 
     if (!slug) {
-      setError("Invalid seminar link.");
+      setError("Invalid event link.");
       return;
     }
 
@@ -268,7 +268,7 @@ export default function StudentPage({ params }) {
           <div className="mx-auto h-11 w-11 animate-spin rounded-full border-4 border-slate-200 border-t-slate-900" />
 
           <p className="mt-4 text-sm font-medium text-slate-600">
-            Loading seminar...
+            Loading event...
           </p>
         </div>
       </main>
@@ -288,7 +288,7 @@ export default function StudentPage({ params }) {
           </div>
 
           <h1 className="mt-5 text-xl font-bold text-slate-900">
-            Seminar unavailable
+            Event unavailable
           </h1>
 
           <p className="mt-2 text-sm leading-6 text-slate-600">{error}</p>
@@ -323,7 +323,7 @@ export default function StudentPage({ params }) {
 
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.15em] text-slate-400">
-                  Seminar
+                  {seminar?.eventType ?? "Event"}
                 </p>
 
                 <h2 className="mt-2 text-xl font-bold text-slate-900">
@@ -373,7 +373,7 @@ export default function StudentPage({ params }) {
                       </p>
 
                       <p className="mt-1 text-xs leading-5 text-slate-500">
-                        Download your official Electrosoft System seminar
+                        Download your official Electrosoft System event
                         completion certificate.
                       </p>
                     </div>
@@ -412,12 +412,15 @@ export default function StudentPage({ params }) {
               <div className="mt-8">
                 <div className="flex items-end justify-between gap-4">
                   <div>
-                    <h2 className="text-xl font-bold text-slate-900">
-                      Seminar Resources
+                    <h2 className="text-xl font-bold text-slate-900 capitalize">
+                      {seminar?.eventType == "WORKSHOP"
+                        ? "Workshop"
+                        : ("Seminar" ?? "Event")}{" "}
+                      Resources
                     </h2>
 
                     <p className="mt-1 text-sm text-slate-500">
-                      Your seminar materials are available below.
+                      Your event materials are available below.
                     </p>
                   </div>
 
@@ -543,9 +546,9 @@ export default function StudentPage({ params }) {
 
               <div className="mt-8 rounded-2xl border border-blue-100 bg-blue-50 p-4">
                 <p className="text-center text-xs leading-5 text-blue-800 sm:text-sm">
-                  Keep this page open while accessing your seminar materials.
-                  Your registration gives you access to the resources provided
-                  for this seminar.
+                  Keep this page open while accessing your event materials. Your
+                  registration gives you access to the resources provided for
+                  this event.
                 </p>
               </div>
 
@@ -688,7 +691,7 @@ export default function StudentPage({ params }) {
                   </p>
 
                   <p className="mt-1 text-[11px] text-slate-400">
-                    Seminar Resources Platform
+                    Event Resources Platform
                   </p>
                 </div>
               </div>
@@ -721,7 +724,7 @@ export default function StudentPage({ params }) {
 
           <div className="border-b border-slate-100 bg-linear-to-br from-slate-50 to-white p-6 sm:p-8">
             <div className="mb-4 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wide text-blue-700">
-              Seminar Resources
+              {seminar?.eventType ?? "Event"} Resources
             </div>
 
             <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
@@ -734,7 +737,7 @@ export default function StudentPage({ params }) {
           <div className="p-6 sm:p-8">
             <div className="mb-7">
               <h2 className="text-lg font-bold text-slate-900">
-                Download seminar PPT
+                Download {seminar?.eventType ?? "Event"} Certificate
               </h2>
             </div>
 

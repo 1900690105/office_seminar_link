@@ -17,7 +17,7 @@ export const metadata = {
 
   keywords: [
     "Electrosoft System",
-    "seminar management",
+    "Event Management",
     "college seminar",
     "student registration",
     "seminar QR code",

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 
 const INITIAL_FORM = {
+  eventType: "SEMINAR",
   title: "",
   collegeName: "",
   speakerName: "",
@@ -226,6 +227,7 @@ export default function NewSeminarPage() {
       setLoading(true);
 
       const payload = {
+        eventType: form.eventType,
         title: form.title.trim(),
         collegeName: form.collegeName.trim(),
         speakerName: form.speakerName.trim(),
@@ -237,7 +239,7 @@ export default function NewSeminarPage() {
         authorizedSignatureStaffId: authorizedSignatureStaffId || null,
       };
 
-      const response = await fetch("/api/seminars", {
+      const response = await fetch("/api/events", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -258,7 +260,7 @@ export default function NewSeminarPage() {
         );
       }
 
-      router.push(`/dashboard/seminars/${data.id}`);
+      router.push(`/dashboard/events/${data.id}`);
       router.refresh();
     } catch (err) {
       console.error("CREATE SEMINAR ERROR:", err);
@@ -288,7 +290,7 @@ export default function NewSeminarPage() {
           <div className="mb-4 flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-blue-600" />
             <span className="text-xs font-bold uppercase tracking-[0.15em] text-blue-600">
-              Seminar Management
+              Event Management
             </span>
           </div>
 
@@ -351,6 +353,26 @@ export default function NewSeminarPage() {
                 required
                 className={inputClass}
               />
+            </div>
+
+            <div>
+              <label
+                htmlFor="eventType"
+                className="mb-2 block text-sm font-bold text-slate-800"
+              >
+                Event Type
+              </label>
+
+              <select
+                id="eventType"
+                name="eventType"
+                value={form.eventType}
+                onChange={handleChange}
+                className={inputClass}
+              >
+                <option value="SEMINAR">Seminar</option>
+                <option value="WORKSHOP">Workshop</option>
+              </select>
             </div>
 
             <div className="grid gap-6 md:grid-cols-2">
@@ -513,8 +535,8 @@ export default function NewSeminarPage() {
                   What happens next?
                 </h3>
                 <p className="mt-1 text-xs leading-5 text-blue-700">
-                  After creating the seminar, continue its setup from the
-                  seminar management page.
+                  After creating the seminar, continue its setup from the Event
+                  Management page.
                 </p>
               </div>
 
@@ -601,7 +623,7 @@ export default function NewSeminarPage() {
             ELECTROSOFT SYSTEM
           </p>
           <p className="mt-1 text-[11px] text-slate-400">
-            Seminar Management Platform
+            Event Management Platform
           </p>
         </div>
       </div>

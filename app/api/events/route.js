@@ -5,7 +5,7 @@ import { makeSlug } from "@/lib/slug";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
-
+const EVENT_TYPES = ["SEMINAR", "WORKSHOP"];
 const LIMITS = {
   title: 150,
   collegeName: 200,
@@ -120,6 +120,15 @@ export async function POST(request) {
     const trainerStaffId = cleanString(body.trainerSignatureStaffId);
     const authorizedStaffId = cleanString(body.authorizedSignatureStaffId);
 
+    const eventType = cleanString(body.eventType || "SEMINAR").toUpperCase();
+
+    if (!EVENT_TYPES.includes(eventType)) {
+      return errorResponse(
+        "Invalid event type. Choose SEMINAR or WORKSHOP.",
+        400,
+      );
+    }
+
     // 4. Required fields.
     if (!title || title.length < 3) {
       return errorResponse(
@@ -211,6 +220,7 @@ export async function POST(request) {
     // precedence over legacy signature URL values from older clients.
     const seminar = await prisma.seminar.create({
       data: {
+        eventType,
         title,
         slug,
         collegeName,
@@ -240,6 +250,7 @@ export async function POST(request) {
           (cleanString(body.authorizedSignaturePublicId) || null),
       },
       select: {
+        eventType: true,
         id: true,
         title: true,
         slug: true,
@@ -269,7 +280,7 @@ export async function POST(request) {
     return NextResponse.json(
       {
         success: true,
-        message: "Seminar created successfully.",
+        message: `${eventType === "WORKSHOP" ? "Workshop" : "Seminar"} created successfully.`,
         seminar,
         id: seminar.id,
       },

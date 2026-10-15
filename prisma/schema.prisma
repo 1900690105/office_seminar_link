@@ -30,6 +30,11 @@ model Admin {
   updatedAt    DateTime @updatedAt
 }
 
+enum EventType {
+  SEMINAR
+  WORKSHOP
+}
+
 model Seminar {
   id          String        @id @default(cuid())
   title       String
@@ -56,7 +61,7 @@ model Seminar {
 
   registrations Registration[]
   resources     Resource[]
-
+eventType EventType @default(SEMINAR)
   trainerSignatureStaffId    String?
   authorizedSignatureStaffId String?
 

@@ -119,11 +119,11 @@ export default async function Dashboard() {
 
   const stats = [
     {
-      label: "Total Seminars",
+      label: "Total Events",
       value: seminars,
-      description: "All seminars created",
+      description: "All events created",
       icon: "▣",
-      href: "/dashboard/seminars",
+      href: "/dashboard/event",
       iconClass: "bg-blue-50 text-blue-700",
     },
 
@@ -132,7 +132,7 @@ export default async function Dashboard() {
       value: publishedSeminars,
       description: "Currently available",
       icon: "✓",
-      href: "/dashboard/seminars",
+      href: "/dashboard/events",
       iconClass: "bg-emerald-50 text-emerald-700",
     },
 
@@ -150,7 +150,7 @@ export default async function Dashboard() {
       value: resources,
       description: "Uploaded files",
       icon: "▤",
-      href: "/dashboard/seminars",
+      href: "/dashboard/events",
       iconClass: "bg-orange-50 text-orange-700",
     },
   ];
@@ -191,7 +191,7 @@ export default async function Dashboard() {
               </p>
 
               <p className="hidden text-xs text-slate-500 sm:block">
-                Seminar Management Platform
+                Events Management Platform
               </p>
             </div>
           </Link>
@@ -245,12 +245,13 @@ export default async function Dashboard() {
               </div>
 
               <h1 className="text-2xl font-black tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
-                Seminar Overview
+                Events Overview
               </h1>
 
               <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                Create seminars, upload learning resources, generate QR codes,
-                manage registrations, and issue certificates from one place.
+                Create seminars and workshops, upload learning resources,
+                generate QR codes, manage registrations, and issue certificates
+                from one place.
               </p>
             </div>
             <div className="flex gap-2">
@@ -265,13 +266,13 @@ export default async function Dashboard() {
               </Link>
 
               <Link
-                href="/dashboard/seminars/new"
+                href="/dashboard/events/new"
                 className="inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-slate-950 px-5 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-slate-800 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2 sm:w-auto"
               >
                 <span className="text-lg leading-none" aria-hidden="true">
                   +
                 </span>
-                Create Seminar
+                Create Event
               </Link>
             </div>
           </div>
@@ -348,7 +349,7 @@ export default async function Dashboard() {
             </div>
 
             <p className="mt-3 text-xs leading-5 text-slate-400">
-              Total seminar registrations across all events.
+              Total Events registrations across all events.
             </p>
           </div>
 
@@ -358,7 +359,7 @@ export default async function Dashboard() {
             <div className="flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-sm font-medium text-slate-500">
-                  Published Seminars
+                  Published Events
                 </p>
 
                 <p className="mt-2 text-2xl font-black text-slate-950">
@@ -372,7 +373,7 @@ export default async function Dashboard() {
             </div>
 
             <p className="mt-3 text-xs leading-5 text-slate-400">
-              Seminars currently available for student registration.
+              Events currently available for student registration.
             </p>
           </div>
 
@@ -409,19 +410,19 @@ export default async function Dashboard() {
           <div className="flex flex-col gap-4 border-b border-slate-200 p-5 sm:flex-row sm:items-center sm:justify-between">
             <div className="min-w-0">
               <h2 className="text-lg font-bold tracking-tight text-slate-950">
-                Recent Seminars
+                Recent Events
               </h2>
 
               <p className="mt-1 text-sm text-slate-500">
-                Your latest seminars and their registration activity.
+                Your latest Events and their registration activity.
               </p>
             </div>
 
             <Link
-              href="/dashboard/seminars"
+              href="/dashboard/events"
               className="inline-flex w-fit items-center rounded-lg py-1 text-sm font-semibold text-slate-700 transition hover:text-slate-950 focus:outline-none focus:ring-2 focus:ring-slate-300"
             >
-              View all seminars
+              View all Events
               <span className="ml-1" aria-hidden="true">
                 →
               </span>
@@ -440,19 +441,19 @@ export default async function Dashboard() {
               </div>
 
               <h3 className="mt-4 font-semibold text-slate-900">
-                No seminars yet
+                No Events yet
               </h3>
 
               <p className="mt-1 max-w-sm text-sm leading-6 text-slate-500">
-                Create your first seminar to start collecting registrations and
+                Create your first Events to start collecting registrations and
                 sharing resources.
               </p>
 
               <Link
-                href="/dashboard/seminars/new"
+                href="/dashboard/events/new"
                 className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
               >
-                Create your first seminar
+                Create your first Events
               </Link>
             </div>
           ) : (
@@ -462,11 +463,11 @@ export default async function Dashboard() {
               ================================================== */}
 
               <div className="hidden overflow-x-auto md:block">
-                <table className="w-full min-w-[850px]">
+                <table className="w-full min-w-212.5">
                   <thead>
                     <tr className="border-b border-slate-200 bg-slate-50/80">
                       <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
-                        Seminar
+                        Event
                       </th>
 
                       <th className="px-5 py-3 text-left text-xs font-bold uppercase tracking-wide text-slate-500">
@@ -501,7 +502,7 @@ export default async function Dashboard() {
 
                         <td className="px-5 py-4">
                           <Link
-                            href={`/dashboard/seminars/${seminar.id}`}
+                            href={`/dashboard/events/${seminar.id}`}
                             className="block max-w-sm rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           >
                             <p className="truncate font-semibold text-slate-900 transition group-hover:text-blue-600">
@@ -561,14 +562,14 @@ export default async function Dashboard() {
                         <td className="px-5 py-4">
                           <div className="flex items-center justify-end gap-2">
                             <Link
-                              href={`/dashboard/seminars/${seminar.id}`}
+                              href={`/dashboard/events/${seminar.id}`}
                               className="inline-flex min-h-9 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-slate-300 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-slate-300"
                             >
                               Manage
                             </Link>
 
                             <Link
-                              href={`/dashboard/seminars/${seminar.id}/edit`}
+                              href={`/dashboard/events/${seminar.id}/edit`}
                               aria-label={`Edit ${seminar.title}`}
                               className="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 transition hover:border-blue-200 hover:bg-blue-50 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-300"
                             >
@@ -611,7 +612,7 @@ export default async function Dashboard() {
                     <div className="flex items-start gap-3">
                       <div className="min-w-0 flex-1">
                         <Link
-                          href={`/dashboard/seminars/${seminar.id}`}
+                          href={`/dashboard/events/${seminar.id}`}
                           className="block rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                         >
                           <h3 className="line-clamp-2 text-sm font-bold leading-5 text-slate-900">
@@ -689,14 +690,14 @@ export default async function Dashboard() {
 
                     <div className="mt-4 grid grid-cols-2 gap-2">
                       <Link
-                        href={`/dashboard/seminars/${seminar.id}`}
+                        href={`/dashboard/events/${seminar.id}`}
                         className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-300"
                       >
                         Manage
                       </Link>
 
                       <Link
-                        href={`/dashboard/seminars/${seminar.id}/edit`}
+                        href={`/dashboard/events/${seminar.id}/edit`}
                         className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl bg-slate-950 px-3 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-1"
                       >
                         <svg
@@ -713,7 +714,7 @@ export default async function Dashboard() {
                           <path d="M12 20h9" />
                           <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
                         </svg>
-                        Edit Seminar
+                        Edit Event
                       </Link>
                     </div>
                   </article>
@@ -733,7 +734,7 @@ export default async function Dashboard() {
           </p>
 
           <p className="mt-1 text-[11px] text-slate-400">
-            Seminar Management Platform
+            Events Management Platform
           </p>
         </footer>
       </div>

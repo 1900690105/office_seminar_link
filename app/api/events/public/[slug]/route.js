@@ -44,6 +44,7 @@ export async function GET(_request, ctx) {
         speakerName: true,
         seminarDate: true,
         status: true,
+        eventType: true,
 
         resources: {
           orderBy: {
@@ -94,7 +95,7 @@ export async function GET(_request, ctx) {
           speakerName: seminar.speakerName,
           seminarDate: seminar.seminarDate,
           status: seminar.status,
-
+          eventType: seminar.eventType,
           resources: seminar.resources.map((resource) => ({
             id: resource.id,
             title: resource.title,

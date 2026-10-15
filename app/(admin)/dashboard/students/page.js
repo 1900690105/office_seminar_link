@@ -336,7 +336,7 @@ export default function StudentsPage() {
             </h1>
 
             <p className="mt-1 text-sm text-slate-500">
-              Manage seminar registrations and student data.
+              Manage event registrations and student data.
             </p>
           </div>
 
@@ -387,7 +387,7 @@ export default function StudentsPage() {
           </div>
 
           <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p className="text-sm font-medium text-slate-500">Seminars</p>
+            <p className="text-sm font-medium text-slate-500">Events</p>
 
             <p className="mt-2 text-3xl font-black text-slate-950">
               {seminars.length}
@@ -413,7 +413,7 @@ export default function StudentsPage() {
             <h2 className="font-bold text-slate-900">Search & Filter</h2>
 
             <p className="mt-1 text-xs text-slate-500">
-              Find students by name, phone number or seminar.
+              Find students by name, phone number or event.
             </p>
           </div>
 
@@ -452,7 +452,7 @@ export default function StudentsPage() {
               onChange={handleSeminarChange}
               className="h-11 rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-700 outline-none transition focus:border-blue-600 focus:ring-4 focus:ring-blue-600/10"
             >
-              <option value="">All Seminars</option>
+              <option value="">All Events</option>
 
               {seminars.map((seminar) => (
                 <option key={seminar.id} value={seminar.id}>
@@ -537,7 +537,7 @@ export default function StudentsPage() {
                     </th>
 
                     <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">
-                      Seminar
+                      Event
                     </th>
 
                     <th className="px-5 py-4 text-xs font-bold uppercase tracking-wider text-slate-500">

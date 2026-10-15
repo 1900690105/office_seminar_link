@@ -128,7 +128,7 @@ export default async function SeminarsPage({ searchParams }) {
             </Link>
 
             <p className="mt-0.5 text-xs font-medium text-slate-500">
-              Seminar Management Platform
+              Event Management Platform
             </p>
           </div>
 
@@ -141,7 +141,7 @@ export default async function SeminarsPage({ searchParams }) {
             </Link>
 
             <Link
-              href="/dashboard/seminars/new"
+              href="/dashboard/events/new"
               className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
             >
               <span className="text-lg leading-none">+</span>
@@ -272,7 +272,7 @@ export default async function SeminarsPage({ searchParams }) {
 
             {(search || selectedStatus !== "ALL") && (
               <Link
-                href="/dashboard/seminars"
+                href="/dashboard/events"
                 className="inline-flex h-11 items-center justify-center rounded-xl border border-slate-200 px-5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 hover:text-slate-900"
               >
                 Clear
@@ -318,7 +318,7 @@ export default async function SeminarsPage({ searchParams }) {
               </p>
 
               <Link
-                href="/dashboard/seminars/new"
+                href="/dashboard/events/new"
                 className="mt-6 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
               >
                 <span className="text-lg leading-none">+</span>
@@ -350,7 +350,7 @@ export default async function SeminarsPage({ searchParams }) {
                         <td className="px-5 py-5">
                           <div className="max-w-[360px]">
                             <Link
-                              href={`/dashboard/seminars/${seminar.id}`}
+                              href={`/dashboard/events/${seminar.id}`}
                               className="font-semibold text-slate-900 transition hover:text-blue-600"
                             >
                               {seminar.title}
@@ -402,7 +402,7 @@ export default async function SeminarsPage({ searchParams }) {
 
                         <td className="px-5 py-5 text-right">
                           <Link
-                            href={`/dashboard/seminars/${seminar.id}`}
+                            href={`/dashboard/events/${seminar.id}`}
                             className="inline-flex rounded-lg border border-slate-200 px-3 py-2 text-sm font-semibold text-slate-700 transition hover:border-slate-300 hover:bg-white hover:text-slate-900"
                           >
                             Manage
@@ -421,7 +421,7 @@ export default async function SeminarsPage({ searchParams }) {
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <Link
-                          href={`/dashboard/seminars/${seminar.id}`}
+                          href={`/dashboard/events/${seminar.id}`}
                           className="font-semibold text-slate-900 hover:text-blue-600"
                         >
                           {seminar.title}
@@ -472,7 +472,7 @@ export default async function SeminarsPage({ searchParams }) {
                     </div>
 
                     <Link
-                      href={`/dashboard/seminars/${seminar.id}`}
+                      href={`/dashboard/events/${seminar.id}`}
                       className="mt-4 flex w-full items-center justify-center rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
                     >
                       Manage Seminar

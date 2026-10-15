@@ -26,7 +26,7 @@ const Header = ({ loading = false }) => {
               </p>
 
               <p className="text-[11px] font-medium text-slate-500">
-                Seminar Management Platform
+                Event Management Platform
               </p>
             </div>
           </div>
